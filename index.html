@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Электронный журнал</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #3b5bdb;
+      --primary-l: #4c6ef5;
+      --primary-d: #2f4ac5;
+      --accent:    #f76707;
+      --success:   #2f9e44;
+      --warning:   #e67700;
+      --danger:    #c92a2a;
+      --bg:        #f0f2ff;
+      --card:      #ffffff;
+      --text:      #1a1b2e;
+      --text-2:    #555770;
+      --border:    #dde1f5;
+      --nav-h:     64px;
+      --header-h:  60px;
+      --radius:    14px;
+      --shadow:    0 2px 12px rgba(59,91,219,.10);
+    }
+    html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input, select { font: inherit; }
+
+    /* ===== LAYOUT ===== */
+    #app { display: flex; flex-direction: column; height: 100vh; }
+    #header {
+      height: var(--header-h);
+      background: var(--primary);
+      color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(59,91,219,.3);
+      position: relative;
+      z-index: 10;
+    }
+    #header h1 { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
+    #header .subtitle { font-size: 11px; opacity: .8; margin-top: 2px; }
+    .header-left { display: flex; flex-direction: column; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: #fff;
+    }
+    .notif-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff; position: relative;
+    }
+    .notif-badge {
+      position: absolute; top: 4px; right: 4px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--primary);
+    }
+
+    #content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .page { display: none; padding: 16px 16px 80px; animation: fadeIn .2s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== BOTTOM NAV ===== */
+    #nav {
+      height: var(--nav-h);
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-shrink: 0;
+      box-shadow: 0 -2px 12px rgba(59,91,219,.08);
+      position: relative; z-index: 10;
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      color: var(--text-2); font-size: 10px; font-weight: 500;
+      padding: 8px 0; position: relative; transition: color .2s;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item .ico { font-size: 22px; line-height: 1; }
+    .nav-item::after {
+      content: ''; position: absolute; top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 3px; border-radius: 0 0 3px 3px;
+      background: var(--primary); transition: width .2s;
+    }
+    .nav-item.active::after { width: 32px; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px;
+    }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+
+    /* ===== STATS ROW ===== */
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat-card {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 14px 12px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .stat-card .ico { font-size: 24px; }
+    .stat-card .val { font-size: 26px; font-weight: 800; color: var(--primary); }
+    .stat-card .lbl { font-size: 11px; color: var(--text-2); font-weight: 500; }
+
+    /* ===== BADGE / CHIP ===== */
+    .chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .chip-5 { background: #d3f9d8; color: #2f9e44; }
+    .chip-4 { background: #d0ebff; color: #1971c2; }
+    .chip-3 { background: #fff3bf; color: #e67700; }
+    .chip-2 { background: #ffe3e3; color: #c92a2a; }
+    .chip-н { background: #ffe8cc; color: #d9480f; }
+    .chip-у { background: #d3f9d8; color: #2f9e44; }
+
+    /* ===== SECTION HEADER ===== */
+    .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .sec-title { font-size: 16px; font-weight: 700; }
+    .see-all { font-size: 12px; color: var(--primary); font-weight: 600; }
+
+    /* ===== SCHEDULE ITEMS ===== */
+    .lesson-list { display: flex; flex-direction: column; gap: 8px; }
+    .lesson-item {
+      display: flex; align-items: stretch; gap: 12px;
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .lesson-color { width: 4px; flex-shrink: 0; }
+    .lesson-body { flex: 1; padding: 10px 12px 10px 0; }
+    .lesson-name { font-size: 14px; font-weight: 700; }
+    .lesson-meta { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+    .lesson-time { padding: 10px 12px; text-align: right; flex-shrink: 0; }
+    .lesson-time .time { font-size: 13px; font-weight: 700; }
+    .lesson-time .dur  { font-size: 10px; color: var(--text-2); margin-top: 2px; }
+
+    /* ===== GRADE TABLE ===== */
+    .grade-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius); box-shadow: var(--shadow); }
+    table { border-collapse: collapse; background: var(--card); width: max-content; min-width: 100%; font-size: 12px; }
+    thead tr { background: var(--primary); color: #fff; }
+    thead th { padding: 10px 8px; font-weight: 700; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+    thead th:first-child { position: sticky; left: 0; z-index: 2; background: var(--primary); min-width: 130px; text-align: left; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: #f7f9ff; }
+    tbody tr:active { background: #eef1ff; }
+    tbody td { padding: 9px 8px; text-align: center; vertical-align: middle; }
+    tbody td:first-child { position: sticky; left: 0; background: inherit; font-weight: 600; text-align: left; border-right: 1px solid var(--border); white-space: nowrap; }
+    .avg-col { font-weight: 800; }
+    tfoot td { background: #eef1ff; font-weight: 700; padding: 8px; text-align: center; border-top: 2px solid var(--primary); font-size: 11px; }
+    tfoot td:first-child { text-align: left; position: sticky; left: 0; background: #eef1ff; border-right: 1px solid var(--border); }
+
+    /* ===== ATTENDANCE ===== */
+    .att-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .att-box { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 8px; text-align: center; }
+    .att-box .num { font-size: 22px; font-weight: 800; }
+    .att-box .lbl { font-size: 10px; color: var(--text-2); font-weight: 500; margin-top: 2px; }
+    .att-green .num { color: var(--success); }
+    .att-orange .num { color: var(--warning); }
+    .att-red .num { color: var(--danger); }
+
+    .att-list { display: flex; flex-direction: column; gap: 6px; }
+    .att-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card); border-radius: 10px;
+      box-shadow: var(--shadow); padding: 10px 12px;
+    }
+    .att-date { font-size: 12px; color: var(--text-2); min-width: 70px; }
+    .att-subj { flex: 1; font-size: 13px; font-weight: 600; }
+    .att-status { font-size: 11px; font-weight: 700; }
+    .att-present { color: var(--success); }
+    .att-absent  { color: var(--danger); }
+    .att-late    { color: var(--warning); }
+
+    /* ===== PROFILE ===== */
+    .profile-header {
+      background: var(--primary);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      color: #fff;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .profile-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 800; flex-shrink: 0;
+    }
+    .profile-name { font-size: 18px; font-weight: 800; }
+    .profile-class { font-size: 13px; opacity: .85; margin-top: 3px; }
+    .profile-school { font-size: 11px; opacity: .7; margin-top: 1px; }
+
+    .profile-menu { display: flex; flex-direction: column; gap: 2px; }
+    .menu-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card); padding: 14px 16px;
+      border-radius: 10px; box-shadow: var(--shadow);
+      font-size: 14px; font-weight: 500; color: var(--text);
+      transition: background .15s;
+    }
+    .menu-item:first-child { border-radius: 10px 10px 4px 4px; }
+    .menu-item:last-child  { border-radius: 4px 4px 10px 10px; }
+    .menu-item + .menu-item { margin-top: 2px; }
+    .menu-item .m-ico { font-size: 20px; width: 28px; text-align: center; }
+    .menu-item .m-arr { margin-left: auto; color: var(--text-2); font-size: 18px; }
+    .menu-item:active { background: #f0f2ff; }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin-top: 6px; }
+    .progress-fill { height: 100%; border-radius: 3px; background: var(--primary); transition: width .4s; }
+
+    /* ===== SUBJECT GRADES ===== */
+    .subj-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .subj-row:last-child { border-bottom: none; }
+    .subj-name { flex: 1; font-size: 13px; font-weight: 600; }
+    .subj-grades { display: flex; gap: 4px; flex-wrap: wrap; }
+    .grade-dot {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .g5 { background: #d3f9d8; color: #2f9e44; }
+    .g4 { background: #d0ebff; color: #1971c2; }
+    .g3 { background: #fff3bf; color: #e67700; }
+    .g2 { background: #ffe3e3; color: #c92a2a; }
+    .subj-avg { font-size: 14px; font-weight: 800; min-width: 28px; text-align: right; }
+
+    /* ===== TODAY CARD ===== */
+    .today-card {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-l) 100%);
+      border-radius: var(--radius);
+      padding: 16px;
+      color: #fff;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 20px rgba(59,91,219,.3);
+    }
+    .today-card .tc-label { font-size: 11px; opacity: .8; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+    .today-card .tc-date  { font-size: 22px; font-weight: 800; margin: 4px 0 10px; }
+    .today-card .tc-row   { display: flex; gap: 16px; }
+    .today-card .tc-item  { display: flex; flex-direction: column; gap: 2px; }
+    .today-card .tc-item .v { font-size: 20px; font-weight: 800; }
+    .today-card .tc-item .l { font-size: 10px; opacity: .75; }
+
+    /* ===== TABS ===== */
+    .tabs { display: flex; gap: 4px; background: var(--border); border-radius: 10px; padding: 3px; margin-bottom: 12px; }
+    .tab-btn {
+      flex: 1; padding: 7px; border-radius: 7px; font-size: 12px; font-weight: 600;
+      color: var(--text-2); transition: all .2s;
+    }
+    .tab-btn.active { background: var(--card); color: var(--primary); box-shadow: var(--shadow); }
+
+    /* ===== FILTER ROW ===== */
+    .filter-row { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+    .filter-chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: var(--card); color: var(--text-2); border: 1.5px solid var(--border);
+      transition: all .15s; white-space: nowrap;
+    }
+    .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: none; align-items: flex-end; z-index: 100;
+      animation: fadeIn .2s;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      background: var(--card); border-radius: 20px 20px 0 0;
+      width: 100%; padding: 16px;
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 16px; }
+    .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 14px; }
+    .grade-input-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 16px; }
+    .grade-btn {
+      aspect-ratio: 1; border-radius: 50%; font-size: 18px; font-weight: 800;
+      border: 2px solid transparent; transition: all .15s;
+    }
+    .grade-btn[data-g="5"] { background: #d3f9d8; color: #2f9e44; }
+    .grade-btn[data-g="4"] { background: #d0ebff; color: #1971c2; }
+    .grade-btn[data-g="3"] { background: #fff3bf; color: #e67700; }
+    .grade-btn[data-g="2"] { background: #ffe3e3; color: #c92a2a; }
+    .grade-btn[data-g="н"] { background: #ffe8cc; color: #d9480f; }
+    .grade-btn.selected { transform: scale(1.15); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,91,219,.2); }
+    .modal-save-btn {
+      width: 100%; padding: 14px; border-radius: 12px;
+      background: var(--primary); color: #fff;
+      font-size: 15px; font-weight: 700; letter-spacing: .3px;
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <div class="header-left">
+      <h1>Электронный журнал</h1>
+      <span class="subtitle" id="hdr-subtitle">10 «А» класс</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-btn">🔔<span class="notif-badge"></span></button>
+      <div class="avatar" id="hdr-avatar">ИП</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- ===== ГЛАВНАЯ ===== -->
+    <section id="page-home" class="page active">
+
+      <div class="today-card">
+        <div class="tc-label">Сегодня</div>
+        <div class="tc-date" id="today-date">16 июня, понедельник</div>
+        <div class="tc-row">
+          <div class="tc-item"><span class="v" id="tc-lessons">5</span><span class="l">уроков</span></div>
+          <div class="tc-item"><span class="v" id="tc-avg">4.3</span><span class="l">средний балл</span></div>
+          <div class="tc-item"><span class="v" id="tc-att">94%</span><span class="l">посещаемость</span></div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="ico">📚</span>
+          <span class="val">8</span>
+          <span class="lbl">предметов</span>
+        </div>
+        <div class="stat-card">
+          <span class="ico">🏆</span>
+          <span class="val">23</span>
+          <span class="lbl">оценок в месяц</span>
+        </div>
+        <div class="stat-card">
+          <span class="ico">✅</span>
+          <span class="val">17/18</span>
+          <span class="lbl">присутствует</span>
+        </div>
+        <div class="stat-card">
+          <span class="ico">📝</span>
+          <span class="val">3</span>
+          <span class="lbl">контрольных</span>
+        </div>
+      </div>
+
+      <div class="sec-header">
+        <span class="sec-title">Успеваемость</span>
+        <button class="see-all" onclick="goPage('grades')">Подробнее</button>
+      </div>
+      <div class="card" style="padding: 12px 16px;">
+        <div id="home-subjects"></div>
+      </div>
+
+      <div class="sec-header" style="margin-top:4px;">
+        <span class="sec-title">Расписание на сегодня</span>
+        <button class="see-all" onclick="goPage('schedule')">Всё</button>
+      </div>
+      <div class="lesson-list" id="home-schedule"></div>
+
+    </section>
+
+    <!-- ===== ЖУРНАЛ (оценки) ===== -->
+    <section id="page-grades" class="page">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchGradeTab('journal',this)">Журнал</button>
+        <button class="tab-btn" onclick="switchGradeTab('subjects',this)">По предметам</button>
+      </div>
+
+      <div id="grade-tab-journal">
+        <div class="filter-row" id="grade-filter-row"></div>
+        <div class="grade-wrap" id="grade-table-wrap"></div>
+      </div>
+
+      <div id="grade-tab-subjects" style="display:none;">
+        <div class="card" id="subjects-list"></div>
+      </div>
+    </section>
+
+    <!-- ===== ПОСЕЩАЕМОСТЬ ===== -->
+    <section id="page-attendance" class="page">
+      <div class="att-summary">
+        <div class="att-box att-green">
+          <div class="num" id="att-num-present">—</div>
+          <div class="lbl">Присутствовал</div>
+        </div>
+        <div class="att-box att-orange">
+          <div class="num" id="att-num-late">—</div>
+          <div class="lbl">Опоздал</div>
+        </div>
+        <div class="att-box att-red">
+          <div class="num" id="att-num-absent">—</div>
+          <div class="lbl">Отсутствовал</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px; padding:12px 16px;">
+        <div class="card-title">Посещаемость за месяц</div>
+        <div style="font-size:28px; font-weight:800; color:var(--primary)" id="att-pct">—</div>
+        <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill" id="att-bar" style="width:0%"></div></div>
+        <div style="font-size:11px; color:var(--text-2); margin-top:6px;">Норма: 75%</div>
+      </div>
+      <div class="sec-header">
+        <span class="sec-title">История</span>
+        <div class="filter-chip active">Май–Июнь</div>
+      </div>
+      <div class="att-list" id="att-list"></div>
+    </section>
+
+    <!-- ===== РАСПИСАНИЕ ===== -->
+    <section id="page-schedule" class="page">
+      <div class="filter-row" id="sched-days"></div>
+      <div class="lesson-list" id="sched-list"></div>
+    </section>
+
+    <!-- ===== ПРОФИЛЬ ===== -->
+    <section id="page-profile" class="page">
+      <div class="profile-header">
+        <div class="profile-avatar" id="prof-avatar">ИП</div>
+        <div>
+          <div class="profile-name" id="prof-name">Иванов Петр</div>
+          <div class="profile-class" id="prof-class">10 «А» класс</div>
+          <div class="profile-school" id="prof-school">МБОУ СОШ №42</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div class="card-title" style="padding: 0 4px 8px;">Учётные данные</div>
+        <div class="profile-menu">
+          <div class="menu-item"><span class="m-ico">👤</span>Личные данные<span class="m-arr">›</span></div>
+          <div class="menu-item"><span class="m-ico">🎓</span>Успеваемость<span class="m-arr">›</span></div>
+          <div class="menu-item"><span class="m-ico">📅</span>Расписание<span class="m-arr">›</span></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="card-title" style="padding: 0 4px 8px;">Настройки</div>
+        <div class="profile-menu">
+          <div class="menu-item"><span class="m-ico">🔔</span>Уведомления<span class="m-arr">›</span></div>
+          <div class="menu-item"><span class="m-ico">🔒</span>Безопасность<span class="m-arr">›</span></div>
+          <div class="menu-item"><span class="m-ico">🌙</span>Тёмная тема<span class="m-arr">›</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="padding: 0 4px 8px;">Прочее</div>
+        <div class="profile-menu">
+          <div class="menu-item"><span class="m-ico">❓</span>Помощь<span class="m-arr">›</span></div>
+          <div class="menu-item" style="color:var(--danger);"><span class="m-ico">🚪</span>Выйти</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="nav">
+    <button class="nav-item active" onclick="goPage('home')"><span class="ico">🏠</span>Главная</button>
+    <button class="nav-item" onclick="goPage('grades')"><span class="ico">📖</span>Журнал</button>
+    <button class="nav-item" onclick="goPage('attendance')"><span class="ico">✅</span>Посещение</button>
+    <button class="nav-item" onclick="goPage('schedule')"><span class="ico">🗓</span>Расписание</button>
+    <button class="nav-item" onclick="goPage('profile')"><span class="ico">👤</span>Профиль</button>
+  </nav>
+</div>
+
+<!-- ADD GRADE MODAL -->
+<div class="modal-overlay" id="modal-grade">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Поставить оценку</div>
+    <div style="font-size:13px; color:var(--text-2); margin-bottom:12px;" id="modal-student"></div>
+    <div class="grade-input-grid">
+      <button class="grade-btn" data-g="5" onclick="selectGrade('5')">5</button>
+      <button class="grade-btn" data-g="4" onclick="selectGrade('4')">4</button>
+      <button class="grade-btn" data-g="3" onclick="selectGrade('3')">3</button>
+      <button class="grade-btn" data-g="2" onclick="selectGrade('2')">2</button>
+      <button class="grade-btn" data-g="н" onclick="selectGrade('н')">Н</button>
+    </div>
+    <button class="modal-save-btn" onclick="saveGrade()">Сохранить</button>
+    <div style="height:8px;"></div>
+  </div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+const STUDENT = { name: 'Иванов Петр', initials: 'ИП', class: '10 «А»', school: 'МБОУ СОШ №42' };
+
+const SUBJECTS = [
+  { id:'math',  name:'Математика',    teacher:'Козлова О.В.', color:'#4c6ef5' },
+  { id:'rus',   name:'Русский язык',  teacher:'Петрова А.М.', color:'#f76707' },
+  { id:'lit',   name:'Литература',    teacher:'Смирнова Е.К.', color:'#2f9e44' },
+  { id:'eng',   name:'Английский',    teacher:'Кузнецова Н.С.', color:'#e64980' },
+  { id:'hist',  name:'История',       teacher:'Орлов И.Д.', color:'#7950f2' },
+  { id:'bio',   name:'Биология',      teacher:'Фёдорова Т.Р.', color:'#099268' },
+  { id:'phys',  name:'Физика',        teacher:'Морозов А.В.', color:'#1971c2' },
+  { id:'geo',   name:'География',     teacher:'Лебедева С.П.', color:'#c2255c' },
+];
+
+const DATES = ['01.06','03.06','05.06','07.06','10.06','12.06','14.06','16.06'];
+
+// grades[subjectId][dateIndex] = grade string or ''
+const grades = {
+  math: ['4','5','3','5','4','','5','4'],
+  rus:  ['5','4','5','','5','4','','5'],
+  lit:  ['4','','4','4','5','3','4',''],
+  eng:  ['3','4','','4','3','4','5','4'],
+  hist: ['5','5','','5','','5','4','5'],
+  bio:  ['4','3','4','','4','5','','4'],
+  phys: ['3','4','5','3','','4','3','5'],
+  geo:  ['4','','5','4','5','','4','5'],
+};
+
+const SCHEDULE = {
+  Пн: [
+    { subj:'math',  time:'08:00', dur:'45 мин', room:'305' },
+    { subj:'rus',   time:'08:50', dur:'45 мин', room:'204' },
+    { subj:'lit',   time:'09:50', dur:'45 мин', room:'204' },
+    { subj:'eng',   time:'10:40', dur:'45 мин', room:'107' },
+    { subj:'phys',  time:'11:40', dur:'45 мин', room:'401' },
+  ],
+  Вт: [
+    { subj:'hist',  time:'08:00', dur:'45 мин', room:'301' },
+    { subj:'bio',   time:'08:50', dur:'45 мин', room:'202' },
+    { subj:'math',  time:'09:50', dur:'45 мин', room:'305' },
+    { subj:'geo',   time:'10:40', dur:'45 мин', room:'208' },
+  ],
+  Ср: [
+    { subj:'eng',   time:'08:00', dur:'45 мин', room:'107' },
+    { subj:'phys',  time:'08:50', dur:'45 мин', room:'401' },
+    { subj:'rus',   time:'09:50', dur:'45 мин', room:'204' },
+    { subj:'lit',   time:'10:40', dur:'45 мин', room:'204' },
+    { subj:'hist',  time:'11:40', dur:'45 мин', room:'301' },
+  ],
+  Чт: [
+    { subj:'math',  time:'08:00', dur:'45 мин', room:'305' },
+    { subj:'bio',   time:'08:50', dur:'45 мин', room:'202' },
+    { subj:'eng',   time:'09:50', dur:'45 мин', room:'107' },
+    { subj:'geo',   time:'10:40', dur:'45 мин', room:'208' },
+    { subj:'phys',  time:'11:40', dur:'45 мин', room:'401' },
+  ],
+  Пт: [
+    { subj:'rus',   time:'08:00', dur:'45 мин', room:'204' },
+    { subj:'math',  time:'08:50', dur:'45 мин', room:'305' },
+    { subj:'lit',   time:'09:50', dur:'45 мин', room:'204' },
+    { subj:'hist',  time:'10:40', dur:'45 мин', room:'301' },
+  ],
+};
+
+const ATT_DATA = [
+  { date:'16.06', subj:'Математика',  status:'present' },
+  { date:'16.06', subj:'Русский язык',status:'present' },
+  { date:'14.06', subj:'Физика',      status:'late'    },
+  { date:'14.06', subj:'Английский',  status:'present' },
+  { date:'12.06', subj:'История',     status:'absent'  },
+  { date:'12.06', subj:'Биология',    status:'present' },
+  { date:'10.06', subj:'Математика',  status:'present' },
+  { date:'10.06', subj:'Русский язык',status:'present' },
+  { date:'07.06', subj:'Физика',      status:'present' },
+  { date:'07.06', subj:'Английский',  status:'absent'  },
+  { date:'05.06', subj:'История',     status:'present' },
+  { date:'05.06', subj:'География',   status:'present' },
+  { date:'03.06', subj:'Математика',  status:'late'    },
+  { date:'03.06', subj:'Литература',  status:'present' },
+  { date:'01.06', subj:'Биология',    status:'present' },
+  { date:'01.06', subj:'Физика',      status:'present' },
+];
+
+/* ===== HELPERS ===== */
+function subj(id) { return SUBJECTS.find(s => s.id === id); }
+function avg(arr) {
+  const nums = arr.filter(g => g && !isNaN(+g)).map(Number);
+  if (!nums.length) return null;
+  return (nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(1);
+}
+function gradeClass(g) {
+  if (!g) return '';
+  if (g==='н') return 'chip-н';
+  if (g==='у') return 'chip-у';
+  return 'chip-'+g;
+}
+function gradeDotClass(g) {
+  const m = {'5':'g5','4':'g4','3':'g3','2':'g2'};
+  return m[g] || '';
+}
+function avgColor(a) {
+  if (!a) return '';
+  const n = parseFloat(a);
+  if (n>=4.5) return 'var(--success)';
+  if (n>=3.5) return 'var(--primary)';
+  if (n>=2.5) return 'var(--warning)';
+  return 'var(--danger)';
+}
+
+/* ===== TODAY ===== */
+function initToday() {
+  const days = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const d = new Date();
+  document.getElementById('today-date').textContent =
+    d.getDate()+' '+months[d.getMonth()]+', '+days[d.getDay()];
+}
+
+/* ===== HOME ===== */
+function initHome() {
+  // subjects mini list
+  const el = document.getElementById('home-subjects');
+  el.innerHTML = SUBJECTS.map(s => {
+    const gs = grades[s.id];
+    const a  = avg(gs);
+    const dots = gs.filter(g=>g&&!isNaN(+g)).slice(-4).map(g =>
+      `<div class="grade-dot ${gradeDotClass(g)}">${g}</div>`
+    ).join('');
+    return `<div class="subj-row">
+      <div class="subj-name">${s.name}</div>
+      <div class="subj-grades">${dots}</div>
+      <div class="subj-avg" style="color:${avgColor(a)}">${a||'—'}</div>
+    </div>`;
+  }).join('');
+
+  // today schedule (Пн)
+  const today = ['Пн','Вт','Ср','Чт','Пт'][new Date().getDay()-1] || 'Пн';
+  const lessons = SCHEDULE[today] || SCHEDULE['Пн'];
+  const el2 = document.getElementById('home-schedule');
+  el2.innerHTML = lessons.slice(0,4).map(l => lessonHTML(l)).join('');
+}
+
+function lessonHTML(l) {
+  const s = subj(l.subj);
+  return `<div class="lesson-item">
+    <div class="lesson-color" style="background:${s.color}"></div>
+    <div class="lesson-body">
+      <div class="lesson-name">${s.name}</div>
+      <div class="lesson-meta">${s.teacher} · Каб. ${l.room}</div>
+    </div>
+    <div class="lesson-time">
+      <div class="time">${l.time}</div>
+      <div class="dur">${l.dur}</div>
+    </div>
+  </div>`;
+}
+
+/* ===== GRADES ===== */
+let currentGradeTab = 'journal';
+let selectedDateFilter = 'all';
+let modalData = {};
+let selectedGrade = '';
+
+function initGrades() {
+  buildFilterRow();
+  buildGradeTable();
+  buildSubjectsList();
+}
+
+function buildFilterRow() {
+  const el = document.getElementById('grade-filter-row');
+  const filters = [{ id:'all', label:'Все' }, ...DATES.map(d=>({id:d,label:d}))];
+  el.innerHTML = filters.map(f =>
+    `<button class="filter-chip${f.id===selectedDateFilter?' active':''}"
+      onclick="setDateFilter('${f.id}',this)">${f.label}</button>`
+  ).join('');
+}
+
+function setDateFilter(id, btn) {
+  selectedDateFilter = id;
+  document.querySelectorAll('#grade-filter-row .filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildGradeTable();
+}
+
+function buildGradeTable() {
+  const dates = selectedDateFilter === 'all' ? DATES : [selectedDateFilter];
+  const di = dates.map(d => DATES.indexOf(d));
+  const wrap = document.getElementById('grade-table-wrap');
+  let html = '<table><thead><tr><th>Предмет</th>';
+  dates.forEach(d => { html += `<th>${d}</th>`; });
+  html += '<th>Ср.</th></tr></thead><tbody>';
+
+  SUBJECTS.forEach(s => {
+    const row = di.map(i => grades[s.id][i] || '');
+    const a = avg(row);
+    html += `<tr><td>${s.name}</td>`;
+    row.forEach((g,idx) => {
+      const realIdx = di[idx];
+      html += `<td onclick="openGradeModal('${s.id}',${realIdx})">`
+            + (g ? `<span class="chip ${gradeClass(g)}">${g}</span>` : '<span style="color:var(--border);font-size:16px;">·</span>')
+            + `</td>`;
+    });
+    html += `<td class="avg-col" style="color:${avgColor(a)}">${a||'—'}</td></tr>`;
+  });
+
+  // avg row
+  html += '</tbody><tfoot><tr><td>Ср. балл</td>';
+  di.forEach(i => {
+    const dayGrades = SUBJECTS.map(s=>grades[s.id][i]).filter(g=>g&&!isNaN(+g)).map(Number);
+    const a = dayGrades.length ? (dayGrades.reduce((a,b)=>a+b,0)/dayGrades.length).toFixed(1) : '—';
+    html += `<td>${a}</td>`;
+  });
+  const allG = Object.values(grades).flat().filter(g=>g&&!isNaN(+g)).map(Number);
+  const totalAvg = allG.length ? (allG.reduce((a,b)=>a+b,0)/allG.length).toFixed(1) : '—';
+  html += `<td><b>${totalAvg}</b></td></tr></tfoot></table>`;
+  wrap.innerHTML = html;
+}
+
+function buildSubjectsList() {
+  const el = document.getElementById('subjects-list');
+  el.innerHTML = SUBJECTS.map(s => {
+    const gs = grades[s.id];
+    const a  = avg(gs);
+    const dots = gs.filter(g=>g&&!isNaN(+g)).map(g =>
+      `<div class="grade-dot ${gradeDotClass(g)}">${g}</div>`
+    ).join('');
+    return `<div class="subj-row">
+      <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+        <div class="subj-name">${s.name}</div>
+        <div style="font-size:11px;color:var(--text-2)">${s.teacher}</div>
+        <div class="subj-grades" style="margin-top:4px;">${dots}</div>
+      </div>
+      <div class="subj-avg" style="color:${avgColor(a)};font-size:18px;">${a||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function switchGradeTab(tab, btn) {
+  document.querySelectorAll('.tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('grade-tab-journal').style.display  = tab==='journal'  ? '' : 'none';
+  document.getElementById('grade-tab-subjects').style.display = tab==='subjects' ? '' : 'none';
+}
+
+/* ===== MODAL ===== */
+function openGradeModal(subjId, dateIdx) {
+  const s = subj(subjId);
+  modalData = { subjId, dateIdx };
+  selectedGrade = grades[subjId][dateIdx] || '';
+  document.getElementById('modal-title').textContent   = s.name;
+  document.getElementById('modal-student').textContent = `Дата: ${DATES[dateIdx]} · Учитель: ${s.teacher}`;
+  document.querySelectorAll('.grade-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.g === selectedGrade);
+  });
+  document.getElementById('modal-grade').classList.add('open');
+}
+
+function selectGrade(g) {
+  selectedGrade = g;
+  document.querySelectorAll('.grade-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.g === g);
+  });
+}
+
+function saveGrade() {
+  if (!selectedGrade && grades[modalData.subjId][modalData.dateIdx]) {
+    grades[modalData.subjId][modalData.dateIdx] = '';
+  } else {
+    grades[modalData.subjId][modalData.dateIdx] = selectedGrade;
+  }
+  document.getElementById('modal-grade').classList.remove('open');
+  buildGradeTable();
+  buildSubjectsList();
+  initHome();
+}
+
+document.getElementById('modal-grade').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+/* ===== ATTENDANCE ===== */
+function initAttendance() {
+  const present = ATT_DATA.filter(a=>a.status==='present').length;
+  const late    = ATT_DATA.filter(a=>a.status==='late').length;
+  const absent  = ATT_DATA.filter(a=>a.status==='absent').length;
+  const total   = ATT_DATA.length;
+  const pct     = Math.round((present+late)/total*100);
+
+  document.getElementById('att-num-present').textContent = present;
+  document.getElementById('att-num-late').textContent    = late;
+  document.getElementById('att-num-absent').textContent  = absent;
+  document.getElementById('att-pct').textContent         = pct+'%';
+  document.getElementById('att-bar').style.width         = pct+'%';
+
+  const statusLabel = { present:'Присутствовал', absent:'Отсутствовал', late:'Опоздал' };
+  const statusClass = { present:'att-present', absent:'att-absent', late:'att-late' };
+  const statusIcon  = { present:'✓', absent:'✗', late:'⚠' };
+
+  document.getElementById('att-list').innerHTML = ATT_DATA.map(a =>
+    `<div class="att-row">
+      <div class="att-date">${a.date}</div>
+      <div class="att-subj">${a.subj}</div>
+      <div class="att-status ${statusClass[a.status]}">${statusIcon[a.status]} ${statusLabel[a.status]}</div>
+    </div>`
+  ).join('');
+}
+
+/* ===== SCHEDULE ===== */
+const DAYS = ['Пн','Вт','Ср','Чт','Пт'];
+let activeDay = 'Пн';
+
+function initSchedule() {
+  const daysEl = document.getElementById('sched-days');
+  daysEl.innerHTML = DAYS.map(d =>
+    `<button class="filter-chip${d===activeDay?' active':''}" onclick="setDay('${d}',this)">${d}</button>`
+  ).join('');
+  renderScheduleDay();
+}
+
+function setDay(d, btn) {
+  activeDay = d;
+  document.querySelectorAll('#sched-days .filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderScheduleDay();
+}
+
+function renderScheduleDay() {
+  const lessons = SCHEDULE[activeDay] || [];
+  document.getElementById('sched-list').innerHTML = lessons.map((l,i) =>
+    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:0;">
+      <div style="color:var(--text-2);font-size:12px;font-weight:700;width:18px;text-align:right;">${i+1}</div>
+      ${lessonHTML(l)}
+     </div>`
+  ).join('<div style="height:8px;"></div>');
+}
+
+/* ===== PROFILE ===== */
+function initProfile() {
+  const initials = STUDENT.initials;
+  document.getElementById('hdr-avatar').textContent   = initials;
+  document.getElementById('prof-avatar').textContent  = initials;
+  document.getElementById('prof-name').textContent    = STUDENT.name;
+  document.getElementById('prof-class').textContent   = STUDENT.class+' класс';
+  document.getElementById('prof-school').textContent  = STUDENT.school;
+  document.getElementById('hdr-subtitle').textContent = STUDENT.class+' класс';
+}
+
+/* ===== NAVIGATION ===== */
+const PAGE_IDS = { home:'page-home', grades:'page-grades', attendance:'page-attendance', schedule:'page-schedule', profile:'page-profile' };
+let currentPage = 'home';
+
+function goPage(name) {
+  if (currentPage === name) return;
+  currentPage = name;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(PAGE_IDS[name]).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach((btn,i) => {
+    const map = ['home','grades','attendance','schedule','profile'];
+    btn.classList.toggle('active', map[i]===name);
+  });
+  document.getElementById('content').scrollTop = 0;
+
+  if (name==='grades')     initGrades();
+  if (name==='attendance') initAttendance();
+  if (name==='schedule')   initSchedule();
+}
+
+/* ===== INIT ===== */
+initToday();
+initProfile();
+initHome();
+initAttendance();
+initSchedule();
+</script>
+</body>
+</html>
