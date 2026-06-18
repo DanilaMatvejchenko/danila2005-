@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ElectronicJournal.Mobile.ViewModels"
+             x:Class="ElectronicJournal.Mobile.Views.ProfilePage"
+             x:DataType="vm:ProfileViewModel"
+             Title="Профиль"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <Label Text="Профиль" Style="{StaticResource PageTitle}" />
+
+            <!-- Avatar -->
+            <Frame BackgroundColor="{StaticResource Primary}"
+                   CornerRadius="50" HeightRequest="100" WidthRequest="100"
+                   HorizontalOptions="Center" HasShadow="True"
+                   BorderColor="Transparent" Padding="0">
+                <Label Text="{Binding Initials}" TextColor="White"
+                       FontSize="36" FontAttributes="Bold"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Frame>
+
+            <Label Text="{Binding FullName}" FontSize="22" FontAttributes="Bold"
+                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}" />
+            <Label Text="{Binding Role}" FontSize="14"
+                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextSecondary}"
+                   Margin="0,-10,0,0" />
+
+            <!-- Info Card -->
+            <Frame Style="{StaticResource CardFrame}" Padding="20">
+                <VerticalStackLayout Spacing="16">
+
+                    <Label Text="Информация" Style="{StaticResource SectionTitle}" Margin="0" />
+
+                    <!-- Email -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Email" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
+                        <Label Text="{Binding Email}" Style="{StaticResource BodyText}" />
+                    </VerticalStackLayout>
+
+                    <!-- Role -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Роль" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
+                        <Label Text="{Binding Role}" Style="{StaticResource BodyText}" />
+                    </VerticalStackLayout>
+
+                    <!-- Group -->
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding GroupName, Converter={x:Null}}">
+                        <Label Text="Группа" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
+                        <Label Text="{Binding GroupName}" Style="{StaticResource BodyText}" />
+                    </VerticalStackLayout>
+
+                    <!-- Phone -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Телефон" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
+                        <Label Text="{Binding Phone, TargetNullValue='Не указан'}"
+                               Style="{StaticResource BodyText}"
+                               IsVisible="{Binding IsEditing, Converter={x:Null}}" />
+                        <Border StrokeShape="RoundRectangle 12" Stroke="{StaticResource Gray200}"
+                                BackgroundColor="{StaticResource White}" Padding="12,0"
+                                IsVisible="{Binding IsEditing}">
+                            <Entry Text="{Binding Phone}"
+                                   Placeholder="Введите номер телефона"
+                                   Keyboard="Telephone" FontSize="16"
+                                   HeightRequest="48" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Actions -->
+            <Button Text="{Binding IsEditing, Converter={x:Null}}"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding ToggleEditCommand}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsEditing}" Value="False">
+                        <Setter Property="Text" Value="Редактировать" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsEditing}" Value="True">
+                        <Setter Property="Text" Value="Отмена" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+
+            <Button Text="Сохранить"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding SaveProfileCommand}"
+                    IsVisible="{Binding IsEditing}" />
+
+            <Button Text="Выйти из аккаунта"
+                    Style="{StaticResource DangerButton}"
+                    Command="{Binding LogoutCommand}"
+                    Margin="0,16,0,0" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
