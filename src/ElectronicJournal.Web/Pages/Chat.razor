@@ -1,0 +1,103 @@
+@page "/chat"
+@attribute [Authorize]
+
+<div class="page-header">
+    <h1 class="page-title">Сообщения</h1>
+</div>
+
+<div class="chat-layout">
+    <div class="chat-contacts">
+        <div class="chat-contacts-header">
+            <input class="form-input" placeholder="Поиск..." style="font-size:13px;padding:8px 10px;" @bind="_searchContact" />
+        </div>
+        <div class="chat-contacts-list">
+            @foreach (var c in FilteredContacts)
+            {
+                <div class="chat-contact @(c.UserId == _selectedContact ? "active" : "")" @onclick="() => SelectContact(c.UserId)">
+                    <div class="avatar">@c.Name[0]</div>
+                    <div class="chat-contact-info">
+                        <div class="chat-contact-name">@c.Name</div>
+                        <div class="chat-contact-preview">@c.LastMessage</div>
+                    </div>
+                    @if (c.UnreadCount > 0)
+                    {
+                        <span class="badge badge-danger">@c.UnreadCount</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="chat-main">
+        @if (_selectedContact == 0)
+        {
+            <div class="empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <div class="icon">&#128172;</div>
+                <h2>Выберите контакт</h2>
+                <p>Выберите контакт из списка для начала общения</p>
+            </div>
+        }
+        else
+        {
+            <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600;">
+                @_contacts.FirstOrDefault(c => c.UserId == _selectedContact)?.Name
+            </div>
+            <div class="chat-messages">
+                @foreach (var msg in _messages.Where(m => m.SenderId == _selectedContact || m.ReceiverId == _selectedContact))
+                {
+                    <div class="chat-message @(msg.SenderId == 1 ? "sent" : "received")">
+                        <div>@msg.Text</div>
+                        <div class="time">@msg.SentAt.ToString("HH:mm")</div>
+                    </div>
+                }
+            </div>
+            <div class="chat-input-area">
+                <input class="form-input" placeholder="Введите сообщение..." @bind="_newMessage"
+                       @onkeydown="HandleKeyDown" />
+                <button class="btn btn-primary" @onclick="SendMessage">&#10148;</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private int _selectedContact;
+    private string _searchContact = "";
+    private string _newMessage = "";
+
+    private List<ChatContactDto> _contacts = new()
+    {
+        new() { UserId = 2, Name = "Смирнов И.П.", LastMessage = "Домашнее задание на завтра...", LastMessageTime = DateTime.Now.AddMinutes(-15), UnreadCount = 2 },
+        new() { UserId = 3, Name = "Козлов А.В.", LastMessage = "Лабораторная работа готова", LastMessageTime = DateTime.Now.AddHours(-1) },
+        new() { UserId = 4, Name = "Орлова М.С.", LastMessage = "Спасибо!", LastMessageTime = DateTime.Now.AddHours(-3) },
+        new() { UserId = 5, Name = "Петров Б.В.", LastMessage = "Когда пересдача?", LastMessageTime = DateTime.Now.AddDays(-1), UnreadCount = 1 },
+    };
+
+    private List<ChatMessageDto> _messages = new()
+    {
+        new() { SenderId = 2, ReceiverId = 1, Text = "Здравствуйте! Напоминаю про домашнее задание.", SentAt = DateTime.Now.AddMinutes(-30) },
+        new() { SenderId = 1, ReceiverId = 2, Text = "Здравствуйте! Спасибо, я помню.", SentAt = DateTime.Now.AddMinutes(-25) },
+        new() { SenderId = 2, ReceiverId = 1, Text = "Домашнее задание на завтра: параграф 15, задачи 1-5.", SentAt = DateTime.Now.AddMinutes(-15) },
+        new() { SenderId = 3, ReceiverId = 1, Text = "Лабораторная работа готова, отправил на проверку.", SentAt = DateTime.Now.AddHours(-1) },
+        new() { SenderId = 1, ReceiverId = 3, Text = "Хорошо, проверю сегодня.", SentAt = DateTime.Now.AddMinutes(-50) },
+    };
+
+    private IEnumerable<ChatContactDto> FilteredContacts => _contacts
+        .Where(c => string.IsNullOrEmpty(_searchContact) || c.Name.Contains(_searchContact, StringComparison.OrdinalIgnoreCase));
+
+    private void SelectContact(int userId) { _selectedContact = userId; }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") SendMessage();
+    }
+
+    private void SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_newMessage) || _selectedContact == 0) return;
+        _messages.Add(new() { SenderId = 1, ReceiverId = _selectedContact, Text = _newMessage, SentAt = DateTime.Now });
+        var contact = _contacts.FirstOrDefault(c => c.UserId == _selectedContact);
+        if (contact != null) { contact.LastMessage = _newMessage; contact.LastMessageTime = DateTime.Now; }
+        _newMessage = "";
+    }
+}

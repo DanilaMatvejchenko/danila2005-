@@ -1,0 +1,193 @@
+@page "/attendance"
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Посещаемость</h1>
+        <p class="page-subtitle">Учёт посещаемости занятий</p>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <select class="form-select" @bind="_selectedGroup">
+        <option value="">Выберите группу</option>
+        <option value="ИС-21">ИС-21</option>
+        <option value="ИС-22">ИС-22</option>
+        <option value="ПР-21">ПР-21</option>
+    </select>
+    <input type="date" class="form-input" style="width:auto;" @bind="_selectedDate" />
+    @if (_isTeacher)
+    {
+        <button class="btn btn-primary btn-sm" @onclick="SaveAttendance">Сохранить</button>
+    }
+</div>
+
+<div class="tabs">
+    <div class="tab @(_activeTab == "list" ? "active" : "")" @onclick='() => _activeTab = "list"'>Отметка</div>
+    <div class="tab @(_activeTab == "stats" ? "active" : "")" @onclick='() => _activeTab = "stats"'>Статистика</div>
+</div>
+
+@if (string.IsNullOrEmpty(_selectedGroup))
+{
+    <div class="empty-state">
+        <div class="icon">&#9745;</div>
+        <h2>Выберите группу</h2>
+        <p>Для отображения посещаемости выберите группу.</p>
+    </div>
+}
+else if (_activeTab == "list")
+{
+    <div class="card">
+        @if (_saved)
+        {
+            <div class="alert alert-success">Посещаемость сохранена!</div>
+        }
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Студент</th>
+                    <th>Статус</th>
+                    <th>Примечание</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < _attendanceList.Count; i++)
+                {
+                    var idx = i;
+                    var item = _attendanceList[idx];
+                    <tr>
+                        <td>@(idx + 1)</td>
+                        <td style="font-weight:500;">@item.StudentName</td>
+                        <td>
+                            @if (_isTeacher)
+                            {
+                                <select class="form-select" style="width:auto;min-width:150px;"
+                                        value="@item.Status" @onchange="e => SetStatus(idx, e)">
+                                    <option value="@AttendanceStatus.Present">Присутствует</option>
+                                    <option value="@AttendanceStatus.Absent">Отсутствует</option>
+                                    <option value="@AttendanceStatus.Late">Опоздал</option>
+                                </select>
+                            }
+                            else
+                            {
+                                <span class="attendance-status @GetStatusClass(item.Status)">@GetStatusText(item.Status)</span>
+                            }
+                        </td>
+                        <td>
+                            @if (_isTeacher)
+                            {
+                                <input class="form-input" style="max-width:200px;" @bind="item.Comment" placeholder="Комментарий" />
+                            }
+                            else
+                            {
+                                @item.Comment
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon green">&#9745;</div>
+            <div>
+                <div class="stat-value">@_attendanceList.Count(a => a.Status == AttendanceStatus.Present)</div>
+                <div class="stat-label">Присутствуют</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red">&#10060;</div>
+            <div>
+                <div class="stat-value">@_attendanceList.Count(a => a.Status == AttendanceStatus.Absent)</div>
+                <div class="stat-label">Отсутствуют</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow">&#9200;</div>
+            <div>
+                <div class="stat-value">@_attendanceList.Count(a => a.Status == AttendanceStatus.Late)</div>
+                <div class="stat-label">Опоздали</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+            <span class="card-title">Детальная статистика</span>
+        </div>
+        <table>
+            <thead><tr><th>Студент</th><th>Присутствие</th><th>Пропуски</th><th>Опоздания</th><th>% посещаемости</th></tr></thead>
+            <tbody>
+                @foreach (var s in _attendanceList)
+                {
+                    <tr>
+                        <td>@s.StudentName</td>
+                        <td><span class="badge badge-success">18</span></td>
+                        <td><span class="badge badge-danger">2</span></td>
+                        <td><span class="badge badge-warning">1</span></td>
+                        <td>90%</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private string _selectedGroup = "";
+    private DateTime _selectedDate = DateTime.Today;
+    private string _activeTab = "list";
+    private bool _isTeacher;
+    private bool _saved;
+    private List<AttendanceDto> _attendanceList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var role = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        _isTeacher = role is "Teacher" or "Admin";
+        LoadDemoData();
+    }
+
+    private void LoadDemoData()
+    {
+        var students = new[] { "Иванов А.А.", "Петров Б.В.", "Сидоров В.Г.", "Козлова Д.Е.", "Морозова Е.Ж.", "Новиков Ж.З.", "Волкова И.К.", "Фёдоров К.Л." };
+        var rng = new Random(7);
+        _attendanceList = students.Select(s => new AttendanceDto
+        {
+            StudentName = s,
+            Date = _selectedDate,
+            Status = (AttendanceStatus)rng.Next(0, 3)
+        }).ToList();
+    }
+
+    private void SetStatus(int idx, ChangeEventArgs e)
+    {
+        if (Enum.TryParse<AttendanceStatus>(e.Value?.ToString(), out var status))
+            _attendanceList[idx].Status = status;
+    }
+
+    private void SaveAttendance() { _saved = true; }
+
+    private string GetStatusClass(AttendanceStatus s) => s switch
+    {
+        AttendanceStatus.Present => "attendance-present",
+        AttendanceStatus.Absent => "attendance-absent",
+        AttendanceStatus.Late => "attendance-late",
+        _ => ""
+    };
+
+    private string GetStatusText(AttendanceStatus s) => s switch
+    {
+        AttendanceStatus.Present => "Присутствует",
+        AttendanceStatus.Absent => "Отсутствует",
+        AttendanceStatus.Late => "Опоздал",
+        _ => ""
+    };
+}

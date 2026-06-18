@@ -1,0 +1,105 @@
+@page "/groups"
+@attribute [Authorize(Roles = "Admin,Teacher")]
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Группы</h1>
+        <p class="page-subtitle">Управление учебными группами</p>
+    </div>
+    <button class="btn btn-primary" @onclick="() => _showAddModal = true">+ Добавить группу</button>
+</div>
+
+<div class="filter-bar">
+    <input class="form-input" style="max-width:300px;" placeholder="Поиск группы..." @bind="_search" @bind:event="oninput" />
+    <select class="form-select" @bind="_filterCourse">
+        <option value="0">Все курсы</option>
+        <option value="1">1 курс</option>
+        <option value="2">2 курс</option>
+        <option value="3">3 курс</option>
+        <option value="4">4 курс</option>
+    </select>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr><th>Название</th><th>Специальность</th><th>Курс</th><th>Студентов</th><th>Куратор</th><th>Действия</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var g in FilteredGroups)
+            {
+                <tr>
+                    <td style="font-weight:600;">@g.Name</td>
+                    <td>@g.Specialization</td>
+                    <td><span class="badge badge-primary">@g.Course курс</span></td>
+                    <td>@g.StudentCount</td>
+                    <td>@g.CuratorName</td>
+                    <td>
+                        <a href="/students?group=@g.Name" class="btn btn-secondary btn-sm">Студенты</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (_showAddModal)
+{
+    <div class="modal-overlay" @onclick="() => _showAddModal = false">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <span class="modal-title">Новая группа</span>
+                <button class="modal-close" @onclick="() => _showAddModal = false">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Название</label>
+                <input class="form-input" @bind="_newGroup.Name" placeholder="ИС-23" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Специальность</label>
+                <input class="form-input" @bind="_newGroup.Specialization" placeholder="Информационные системы" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Курс</label>
+                <select class="form-select" @bind="_newGroup.Course">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="() => _showAddModal = false">Отмена</button>
+                <button class="btn btn-primary" @onclick="AddGroup">Создать</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string _search = "";
+    private int _filterCourse;
+    private bool _showAddModal;
+    private GroupDto _newGroup = new() { Course = 1 };
+
+    private List<GroupDto> _groups = new()
+    {
+        new() { Id = 1, Name = "ИС-21", Specialization = "Информационные системы", Course = 3, StudentCount = 25, CuratorName = "Смирнов И.П." },
+        new() { Id = 2, Name = "ИС-22", Specialization = "Информационные системы", Course = 2, StudentCount = 23, CuratorName = "Козлов А.В." },
+        new() { Id = 3, Name = "ПР-21", Specialization = "Программирование", Course = 3, StudentCount = 28, CuratorName = "Орлова М.С." },
+        new() { Id = 4, Name = "ПР-22", Specialization = "Программирование", Course = 2, StudentCount = 22, CuratorName = "Белова Е.Н." },
+        new() { Id = 5, Name = "ЭК-21", Specialization = "Экономика", Course = 3, StudentCount = 20, CuratorName = "Новиков Д.А." },
+    };
+
+    private IEnumerable<GroupDto> FilteredGroups => _groups
+        .Where(g => (string.IsNullOrEmpty(_search) || g.Name.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            && (_filterCourse == 0 || g.Course == _filterCourse));
+
+    private void AddGroup()
+    {
+        _newGroup.Id = _groups.Count + 1;
+        _groups.Add(_newGroup);
+        _newGroup = new() { Course = 1 };
+        _showAddModal = false;
+    }
+}

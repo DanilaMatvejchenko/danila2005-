@@ -1,0 +1,89 @@
+@page "/profile"
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="page-header">
+    <h1 class="page-title">Профиль</h1>
+</div>
+
+<div class="card">
+    <div class="profile-header">
+        <div class="profile-avatar">@(_user.FullName.Length > 0 ? _user.FullName[0].ToString().ToUpper() : "?")</div>
+        <div>
+            <h2>@_user.FullName</h2>
+            <span class="badge badge-primary">@GetRoleText(_user.Role)</span>
+            @if (!string.IsNullOrEmpty(_user.GroupName))
+            {
+                <span class="badge badge-success" style="margin-left:4px;">@_user.GroupName</span>
+            }
+        </div>
+    </div>
+
+    @if (_saved)
+    {
+        <div class="alert alert-success">Профиль обновлён!</div>
+    }
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px;">
+        <div class="form-group">
+            <label class="form-label">Полное имя</label>
+            <input class="form-input" @bind="_user.FullName" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Электронная почта</label>
+            <input class="form-input" @bind="_user.Email" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Телефон</label>
+            <input class="form-input" @bind="_user.Phone" placeholder="+7 (999) 123-45-67" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Роль</label>
+            <input class="form-input" value="@GetRoleText(_user.Role)" disabled />
+        </div>
+    </div>
+
+    <button class="btn btn-primary" @onclick="Save" style="margin-top:8px;">Сохранить изменения</button>
+</div>
+
+<div class="card" style="max-width:600px;">
+    <div class="card-header"><span class="card-title">Сменить пароль</span></div>
+    <div class="form-group">
+        <label class="form-label">Текущий пароль</label>
+        <input type="password" class="form-input" @bind="_currentPassword" />
+    </div>
+    <div class="form-group">
+        <label class="form-label">Новый пароль</label>
+        <input type="password" class="form-input" @bind="_newPassword" />
+    </div>
+    <div class="form-group">
+        <label class="form-label">Подтверждение пароля</label>
+        <input type="password" class="form-input" @bind="_confirmPassword" />
+    </div>
+    <button class="btn btn-secondary">Обновить пароль</button>
+</div>
+
+@code {
+    private UserDto _user = new() { FullName = "Иванов Иван Иванович", Email = "ivanov@college.ru", Role = "Student", GroupName = "ИС-21", Phone = "+7 (999) 123-45-67" };
+    private string _currentPassword = "";
+    private string _newPassword = "";
+    private string _confirmPassword = "";
+    private bool _saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var name = authState.User.Identity?.Name;
+        if (!string.IsNullOrEmpty(name)) _user.FullName = name;
+    }
+
+    private void Save() { _saved = true; }
+
+    private string GetRoleText(string role) => role switch
+    {
+        "Admin" => "Администратор",
+        "Teacher" => "Преподаватель",
+        "Student" => "Студент",
+        _ => role
+    };
+}

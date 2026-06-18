@@ -1,0 +1,211 @@
+@page "/journal"
+@attribute [Authorize]
+@inject IApiService Api
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Журнал оценок</h1>
+        <p class="page-subtitle">Просмотр и выставление оценок</p>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <select class="form-select" @bind="_selectedGroup">
+        <option value="">Выберите группу</option>
+        @foreach (var g in _groups)
+        {
+            <option value="@g">@g</option>
+        }
+    </select>
+    <select class="form-select" @bind="_selectedSubject">
+        <option value="">Выберите предмет</option>
+        @foreach (var s in _subjects)
+        {
+            <option value="@s">@s</option>
+        }
+    </select>
+    <select class="form-select" @bind="_selectedMonth">
+        <option value="6">Июнь</option>
+        <option value="5">Май</option>
+        <option value="4">Апрель</option>
+        <option value="3">Март</option>
+    </select>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Загрузка журнала...</p>
+    </div>
+}
+else if (string.IsNullOrEmpty(_selectedGroup) || string.IsNullOrEmpty(_selectedSubject))
+{
+    <div class="empty-state">
+        <div class="icon">&#128214;</div>
+        <h2>Выберите группу и предмет</h2>
+        <p>Для отображения журнала выберите группу и предмет в фильтрах выше.</p>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width:200px;position:sticky;left:0;background:var(--bg);z-index:2;">Студент</th>
+                        @foreach (var date in _dates)
+                        {
+                            <th style="text-align:center;min-width:50px;">@date.ToString("dd.MM")</th>
+                        }
+                        <th style="text-align:center;">Ср.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in _students)
+                    {
+                        <tr>
+                            <td style="position:sticky;left:0;background:var(--bg-card);z-index:1;font-weight:500;">@student</td>
+                            @foreach (var date in _dates)
+                            {
+                                var grade = GetGrade(student, date);
+                                <td style="text-align:center;">
+                                    @if (_isTeacher)
+                                    {
+                                        <div class="grade-cell @GetGradeClass(grade)" @onclick="() => EditGrade(student, date)">
+                                            @(grade > 0 ? grade.ToString() : "")
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="grade-cell @GetGradeClass(grade)">
+                                            @(grade > 0 ? grade.ToString() : "")
+                                        </div>
+                                    }
+                                </td>
+                            }
+                            <td style="text-align:center;font-weight:700;">@GetAverage(student).ToString("F1")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (_showGradeModal)
+    {
+        <div class="modal-overlay" @onclick="() => _showGradeModal = false">
+            <div class="modal" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <span class="modal-title">Выставить оценку</span>
+                    <button class="modal-close" @onclick="() => _showGradeModal = false">&times;</button>
+                </div>
+                <p style="margin-bottom:12px;color:var(--text-secondary);">@_editStudent — @_editDate?.ToString("dd.MM.yyyy")</p>
+                <div class="form-group">
+                    <label class="form-label">Оценка</label>
+                    <select class="form-select" @bind="_editGradeValue">
+                        <option value="0">— Убрать —</option>
+                        <option value="5">5 (Отлично)</option>
+                        <option value="4">4 (Хорошо)</option>
+                        <option value="3">3 (Удовлетворительно)</option>
+                        <option value="2">2 (Неудовлетворительно)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Тип</label>
+                    <select class="form-select" @bind="_editGradeType">
+                        <option>Текущая</option>
+                        <option>Контрольная</option>
+                        <option>Самостоятельная</option>
+                        <option>Лабораторная</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Комментарий</label>
+                    <textarea class="form-textarea" @bind="_editComment" placeholder="Необязательно"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => _showGradeModal = false">Отмена</button>
+                    <button class="btn btn-primary" @onclick="SaveGrade">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private bool _loading;
+    private bool _isTeacher;
+    private string _selectedGroup = "";
+    private string _selectedSubject = "";
+    private string _selectedMonth = "6";
+
+    private List<string> _groups = new() { "ИС-21", "ИС-22", "ПР-21", "ПР-22", "ЭК-21" };
+    private List<string> _subjects = new() { "Математика", "Информатика", "Физика", "Русский язык", "История", "Английский язык" };
+    private List<string> _students = new() { "Иванов А.А.", "Петров Б.В.", "Сидоров В.Г.", "Козлова Д.Е.", "Морозова Е.Ж.", "Новиков Ж.З.", "Волкова И.К.", "Фёдоров К.Л." };
+    private List<DateTime> _dates = new();
+    private Dictionary<(string, DateTime), int> _grades = new();
+
+    private bool _showGradeModal;
+    private string _editStudent = "";
+    private DateTime? _editDate;
+    private int _editGradeValue;
+    private string _editGradeType = "Текущая";
+    private string _editComment = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var role = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        _isTeacher = role is "Teacher" or "Admin";
+
+        _dates = Enumerable.Range(1, 20).Select(d => new DateTime(2026, 6, d)).Where(d => d.DayOfWeek is not DayOfWeek.Sunday).ToList();
+
+        var rng = new Random(42);
+        foreach (var s in _students)
+            foreach (var d in _dates)
+                if (rng.Next(3) > 0)
+                    _grades[(s, d)] = rng.Next(2, 6);
+    }
+
+    private int GetGrade(string student, DateTime date) => _grades.TryGetValue((student, date), out var g) ? g : 0;
+
+    private string GetGradeClass(int grade) => grade switch
+    {
+        5 => "grade-5",
+        4 => "grade-4",
+        3 => "grade-3",
+        2 => "grade-2",
+        _ => "grade-empty"
+    };
+
+    private double GetAverage(string student)
+    {
+        var grades = _dates.Select(d => GetGrade(student, d)).Where(g => g > 0).ToList();
+        return grades.Count > 0 ? grades.Average() : 0;
+    }
+
+    private void EditGrade(string student, DateTime date)
+    {
+        _editStudent = student;
+        _editDate = date;
+        _editGradeValue = GetGrade(student, date);
+        _editComment = "";
+        _editGradeType = "Текущая";
+        _showGradeModal = true;
+    }
+
+    private void SaveGrade()
+    {
+        if (_editDate.HasValue)
+        {
+            if (_editGradeValue > 0)
+                _grades[(_editStudent, _editDate.Value)] = _editGradeValue;
+            else
+                _grades.Remove((_editStudent, _editDate.Value));
+        }
+        _showGradeModal = false;
+    }
+}

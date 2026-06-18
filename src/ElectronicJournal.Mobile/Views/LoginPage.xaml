@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ElectronicJournal.Mobile.ViewModels"
+             x:Class="ElectronicJournal.Mobile.Views.LoginPage"
+             x:DataType="vm:LoginViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" VerticalOptions="Center" Padding="24">
+
+            <!-- Logo Area -->
+            <Frame BackgroundColor="{StaticResource Primary}"
+                   CornerRadius="24" HasShadow="True" BorderColor="Transparent"
+                   HeightRequest="120" WidthRequest="120"
+                   HorizontalOptions="Center" Margin="0,0,0,32" Padding="0">
+                <Label Text="ЭЖ" TextColor="White" FontSize="42"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Frame>
+
+            <Label Text="Электронный журнал"
+                   Style="{StaticResource PageTitle}"
+                   HorizontalTextAlignment="Center" />
+
+            <Label Text="Войдите в свой аккаунт"
+                   Style="{StaticResource CaptionText}"
+                   HorizontalTextAlignment="Center" Margin="0,0,0,32" />
+
+            <!-- Login Form -->
+            <Frame Style="{StaticResource CardFrame}" Padding="20">
+                <VerticalStackLayout Spacing="16">
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Email" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
+                        <Border StrokeShape="RoundRectangle 12" Stroke="{StaticResource Gray200}"
+                                BackgroundColor="{StaticResource White}" Padding="12,0">
+                            <Entry Placeholder="Введите email"
+                                   Text="{Binding Email}"
+                                   Keyboard="Email"
+                                   FontSize="16"
+                                   HeightRequest="48" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Пароль" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
+                        <Border StrokeShape="RoundRectangle 12" Stroke="{StaticResource Gray200}"
+                                BackgroundColor="{StaticResource White}" Padding="12,0">
+                            <Entry Placeholder="Введите пароль"
+                                   Text="{Binding Password}"
+                                   IsPassword="True"
+                                   FontSize="16"
+                                   HeightRequest="48" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <!-- Error message -->
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="{StaticResource Danger}"
+                           FontSize="14"
+                           IsVisible="{Binding HasError}"
+                           HorizontalTextAlignment="Center" />
+
+                    <Button Text="Войти"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding LoginCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                            Margin="0,8,0,0" />
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       HorizontalOptions="Center" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

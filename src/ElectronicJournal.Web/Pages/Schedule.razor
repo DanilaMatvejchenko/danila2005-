@@ -1,0 +1,92 @@
+@page "/schedule"
+@attribute [Authorize]
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Расписание</h1>
+        <p class="page-subtitle">Расписание занятий на неделю</p>
+    </div>
+    <div class="filter-bar" style="margin-bottom:0;">
+        <select class="form-select" @bind="_selectedGroup">
+            <option value="ИС-21">ИС-21</option>
+            <option value="ИС-22">ИС-22</option>
+            <option value="ПР-21">ПР-21</option>
+        </select>
+    </div>
+</div>
+
+<div class="card">
+    <div class="schedule-grid">
+        <div class="schedule-header">Время</div>
+        @foreach (var day in _days)
+        {
+            <div class="schedule-header">@day</div>
+        }
+
+        @for (int lesson = 1; lesson <= 4; lesson++)
+        {
+            var l = lesson;
+            <div class="schedule-time">
+                <div>
+                    <div style="font-weight:600;">@l пара</div>
+                    <div>@GetTime(l)</div>
+                </div>
+            </div>
+            @foreach (var day in _days)
+            {
+                var entry = GetScheduleEntry(day, l);
+                <div class="schedule-cell" style="@(entry != null ? $"border-left:3px solid {entry.Value.color};" : "")">
+                    @if (entry != null)
+                    {
+                        <div class="subject">@entry.Value.subject</div>
+                        <div class="teacher">@entry.Value.teacher</div>
+                        <div class="room">&#128205; @entry.Value.room</div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private string _selectedGroup = "ИС-21";
+    private string[] _days = { "Пн", "Вт", "Ср", "Чт", "Пт", "Сб" };
+
+    private record ScheduleEntry(string subject, string teacher, string room, string color);
+
+    private Dictionary<(string, int), ScheduleEntry> _schedule = new()
+    {
+        { ("Пн", 1), new("Математика", "Смирнов И.П.", "301", "#2563eb") },
+        { ("Пн", 2), new("Информатика", "Козлов А.В.", "205", "#16a34a") },
+        { ("Пн", 3), new("Физика", "Орлова М.С.", "312", "#d97706") },
+        { ("Вт", 1), new("Русский язык", "Белова Е.Н.", "108", "#dc2626") },
+        { ("Вт", 2), new("История", "Новиков Д.А.", "204", "#7c3aed") },
+        { ("Вт", 3), new("Математика", "Смирнов И.П.", "301", "#2563eb") },
+        { ("Вт", 4), new("Англ. язык", "Фролова К.Р.", "115", "#0891b2") },
+        { ("Ср", 1), new("Информатика", "Козлов А.В.", "205", "#16a34a") },
+        { ("Ср", 2), new("Информатика", "Козлов А.В.", "205", "#16a34a") },
+        { ("Ср", 3), new("Физ. культура", "Волков С.С.", "Зал", "#ea580c") },
+        { ("Чт", 1), new("Физика", "Орлова М.С.", "312", "#d97706") },
+        { ("Чт", 2), new("Математика", "Смирнов И.П.", "301", "#2563eb") },
+        { ("Чт", 3), new("Русский язык", "Белова Е.Н.", "108", "#dc2626") },
+        { ("Пт", 1), new("Англ. язык", "Фролова К.Р.", "115", "#0891b2") },
+        { ("Пт", 2), new("История", "Новиков Д.А.", "204", "#7c3aed") },
+        { ("Пт", 3), new("Информатика", "Козлов А.В.", "205", "#16a34a") },
+        { ("Сб", 1), new("Математика", "Смирнов И.П.", "301", "#2563eb") },
+        { ("Сб", 2), new("Физ. культура", "Волков С.С.", "Зал", "#ea580c") },
+    };
+
+    private ScheduleEntry? GetScheduleEntry(string day, int lesson)
+    {
+        return _schedule.TryGetValue((day, lesson), out var e) ? e : null;
+    }
+
+    private string GetTime(int lesson) => lesson switch
+    {
+        1 => "8:30-10:00",
+        2 => "10:10-11:40",
+        3 => "12:10-13:40",
+        4 => "13:50-15:20",
+        _ => ""
+    };
+}

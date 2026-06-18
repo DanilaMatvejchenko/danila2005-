@@ -1,0 +1,86 @@
+@inherits LayoutComponentBase
+@inject ThemeService ThemeService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="app-layout" data-theme="@(_isDark ? "dark" : "")">
+    <nav class="sidebar @(_sidebarCollapsed ? "collapsed" : "") @(_mobileOpen ? "mobile-open" : "")">
+        <div class="sidebar-brand">
+            <span class="brand-icon">&#127891;</span>
+            <span>Журнал</span>
+        </div>
+        <NavMenu SidebarCollapsed="@_sidebarCollapsed" UserRole="@_userRole" />
+    </nav>
+
+    <div class="main-area">
+        <header class="top-header">
+            <div class="header-left">
+                <button class="menu-toggle" @onclick="ToggleSidebar" title="Свернуть меню">&#9776;</button>
+                <span class="header-title">Электронный журнал</span>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" title="Уведомления">
+                    &#128276;
+                    <span class="notification-badge"></span>
+                </button>
+                <button class="header-btn" @onclick="ToggleTheme" title="Сменить тему">
+                    @(_isDark ? "☀" : "☽")
+                </button>
+                <div class="user-menu" @onclick="() => _showUserDropdown = !_showUserDropdown">
+                    <div class="user-avatar">@(_userName?.Length > 0 ? _userName[0].ToString().ToUpper() : "?")</div>
+                    <span class="user-name">@_userName</span>
+                </div>
+                @if (_showUserDropdown)
+                {
+                    <div style="position:absolute;top:56px;right:24px;z-index:50;">
+                        <div class="card" style="min-width:180px;padding:8px;">
+                            <a class="nav-link" href="/profile" style="color:var(--text);">&#128100; Профиль</a>
+                            <a class="nav-link" style="color:var(--danger);cursor:pointer;" @onclick="Logout">&#128682; Выйти</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </header>
+
+        <main class="main-content">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool _sidebarCollapsed;
+    private bool _mobileOpen;
+    private bool _isDark;
+    private bool _showUserDropdown;
+    private string _userName = "";
+    private string _userRole = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isDark = await ThemeService.IsDarkMode();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _userName = user.Identity?.Name ?? "Пользователь";
+        _userRole = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    }
+
+    private void ToggleSidebar()
+    {
+        _sidebarCollapsed = !_sidebarCollapsed;
+        _mobileOpen = !_mobileOpen;
+    }
+
+    private async Task ToggleTheme()
+    {
+        _isDark = !_isDark;
+        await ThemeService.SetDarkMode(_isDark);
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}

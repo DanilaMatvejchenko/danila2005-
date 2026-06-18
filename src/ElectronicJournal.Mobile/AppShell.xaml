@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:ElectronicJournal.Mobile.Views"
+       x:Class="ElectronicJournal.Mobile.AppShell"
+       FlyoutBehavior="Flyout"
+       FlyoutBackgroundColor="{StaticResource White}"
+       Shell.FlyoutWidth="300">
+
+    <Shell.FlyoutHeader>
+        <Grid HeightRequest="140" BackgroundColor="{StaticResource Primary}" Padding="20">
+            <VerticalStackLayout VerticalOptions="End" Spacing="4">
+                <Label Text="Электронный журнал"
+                       TextColor="White" FontSize="20" FontAttributes="Bold" />
+                <Label Text="Техникум"
+                       TextColor="#ffffffcc" FontSize="14" />
+            </VerticalStackLayout>
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <!-- Login (no flyout item) -->
+    <ShellContent Route="login"
+                  ContentTemplate="{DataTemplate views:LoginPage}"
+                  FlyoutItemIsVisible="False"
+                  Shell.FlyoutBehavior="Disabled" />
+
+    <!-- Main Navigation -->
+    <FlyoutItem Title="Главная" Icon="{x:Null}">
+        <ShellContent Route="dashboard"
+                      ContentTemplate="{DataTemplate views:DashboardPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Журнал оценок" Icon="{x:Null}">
+        <ShellContent Route="journal"
+                      ContentTemplate="{DataTemplate views:JournalPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Расписание" Icon="{x:Null}">
+        <ShellContent Route="schedule"
+                      ContentTemplate="{DataTemplate views:SchedulePage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Посещаемость" Icon="{x:Null}">
+        <ShellContent Route="attendance"
+                      ContentTemplate="{DataTemplate views:AttendancePage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Чат" Icon="{x:Null}">
+        <ShellContent Route="chat"
+                      ContentTemplate="{DataTemplate views:ChatPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Профиль" Icon="{x:Null}">
+        <ShellContent Route="profile"
+                      ContentTemplate="{DataTemplate views:ProfilePage}" />
+    </FlyoutItem>
+
+</Shell>

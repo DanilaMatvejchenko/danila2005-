@@ -1,0 +1,117 @@
+@page "/students"
+@attribute [Authorize(Roles = "Admin,Teacher")]
+@inject NavigationManager Navigation
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Студенты</h1>
+        <p class="page-subtitle">Список студентов</p>
+    </div>
+    <button class="btn btn-primary" @onclick="() => _showAddModal = true">+ Добавить студента</button>
+</div>
+
+<div class="filter-bar">
+    <input class="form-input" style="max-width:300px;" placeholder="Поиск по ФИО..." @bind="_search" @bind:event="oninput" />
+    <select class="form-select" @bind="_filterGroup">
+        <option value="">Все группы</option>
+        <option value="ИС-21">ИС-21</option>
+        <option value="ИС-22">ИС-22</option>
+        <option value="ПР-21">ПР-21</option>
+    </select>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr><th>#</th><th>ФИО</th><th>Группа</th><th>Email</th><th>Телефон</th><th>Средний балл</th></tr>
+        </thead>
+        <tbody>
+            @{ int idx = 0; }
+            @foreach (var s in FilteredStudents)
+            {
+                idx++;
+                <tr>
+                    <td>@idx</td>
+                    <td style="font-weight:500;">@s.FullName</td>
+                    <td><span class="badge badge-primary">@s.GroupName</span></td>
+                    <td>@s.Email</td>
+                    <td>@s.Phone</td>
+                    <td><span class="badge badge-success">4.@(new Random(s.Id).Next(0,9))</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (!FilteredStudents.Any())
+    {
+        <div class="empty-state">
+            <p>Студенты не найдены</p>
+        </div>
+    }
+</div>
+
+@if (_showAddModal)
+{
+    <div class="modal-overlay" @onclick="() => _showAddModal = false">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <span class="modal-title">Добавить студента</span>
+                <button class="modal-close" @onclick="() => _showAddModal = false">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ФИО</label>
+                <input class="form-input" @bind="_newStudent.FullName" placeholder="Фамилия Имя Отчество" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="form-input" @bind="_newStudent.Email" placeholder="email@example.com" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Группа</label>
+                <select class="form-select" @bind="_newStudent.GroupName">
+                    <option value="ИС-21">ИС-21</option>
+                    <option value="ИС-22">ИС-22</option>
+                    <option value="ПР-21">ПР-21</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Телефон</label>
+                <input class="form-input" @bind="_newStudent.Phone" placeholder="+7 (999) 123-45-67" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="() => _showAddModal = false">Отмена</button>
+                <button class="btn btn-primary" @onclick="AddStudent">Добавить</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string _search = "";
+    private string _filterGroup = "";
+    private bool _showAddModal;
+    private UserDto _newStudent = new() { GroupName = "ИС-21" };
+
+    private List<UserDto> _students = new()
+    {
+        new() { Id = 1, FullName = "Иванов Александр Александрович", GroupName = "ИС-21", Email = "ivanov@college.ru", Phone = "+7 (900) 111-22-33" },
+        new() { Id = 2, FullName = "Петров Борис Владимирович", GroupName = "ИС-21", Email = "petrov@college.ru", Phone = "+7 (900) 222-33-44" },
+        new() { Id = 3, FullName = "Сидоров Виктор Геннадьевич", GroupName = "ИС-22", Email = "sidorov@college.ru", Phone = "+7 (900) 333-44-55" },
+        new() { Id = 4, FullName = "Козлова Дарья Евгеньевна", GroupName = "ИС-22", Email = "kozlova@college.ru", Phone = "+7 (900) 444-55-66" },
+        new() { Id = 5, FullName = "Морозова Елена Жановна", GroupName = "ПР-21", Email = "morozova@college.ru", Phone = "+7 (900) 555-66-77" },
+        new() { Id = 6, FullName = "Новиков Жан Захарович", GroupName = "ПР-21", Email = "novikov@college.ru", Phone = "+7 (900) 666-77-88" },
+        new() { Id = 7, FullName = "Волкова Ирина Кирилловна", GroupName = "ИС-21", Email = "volkova@college.ru", Phone = "+7 (900) 777-88-99" },
+        new() { Id = 8, FullName = "Фёдоров Кирилл Леонидович", GroupName = "ПР-21", Email = "fedorov@college.ru", Phone = "+7 (900) 888-99-00" },
+    };
+
+    private IEnumerable<UserDto> FilteredStudents => _students
+        .Where(s => (string.IsNullOrEmpty(_search) || s.FullName.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrEmpty(_filterGroup) || s.GroupName == _filterGroup));
+
+    private void AddStudent()
+    {
+        _newStudent.Id = _students.Count + 1;
+        _students.Add(_newStudent);
+        _newStudent = new() { GroupName = "ИС-21" };
+        _showAddModal = false;
+    }
+}

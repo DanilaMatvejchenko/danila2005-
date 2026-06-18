@@ -1,0 +1,233 @@
+@page "/"
+@attribute [Authorize]
+@inject IApiService Api
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Добро пожаловать, @_userName!</h1>
+        <p class="page-subtitle">@DateTime.Now.ToString("dddd, d MMMM yyyy", new System.Globalization.CultureInfo("ru-RU"))</p>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Загрузка данных...</p>
+    </div>
+}
+else
+{
+    <div class="stats-grid">
+        @if (_role == "Student")
+        {
+            <div class="stat-card">
+                <div class="stat-icon blue">&#128218;</div>
+                <div>
+                    <div class="stat-value">4.2</div>
+                    <div class="stat-label">Средний балл</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">&#9745;</div>
+                <div>
+                    <div class="stat-value">92%</div>
+                    <div class="stat-label">Посещаемость</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon yellow">&#128197;</div>
+                <div>
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Пар сегодня</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">&#128276;</div>
+                <div>
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Уведомления</div>
+                </div>
+            </div>
+        }
+        else if (_role == "Teacher")
+        {
+            <div class="stat-card">
+                <div class="stat-icon blue">&#128101;</div>
+                <div>
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Моих групп</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">&#128214;</div>
+                <div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Пар сегодня</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon yellow">&#128221;</div>
+                <div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Оценок за неделю</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">&#128276;</div>
+                <div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Уведомления</div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="stat-card">
+                <div class="stat-icon blue">&#128101;</div>
+                <div>
+                    <div class="stat-value">245</div>
+                    <div class="stat-label">Студентов</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">&#128100;</div>
+                <div>
+                    <div class="stat-value">32</div>
+                    <div class="stat-label">Преподавателей</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon yellow">&#128101;</div>
+                <div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Групп</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">&#128218;</div>
+                <div>
+                    <div class="stat-value">18</div>
+                    <div class="stat-label">Предметов</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;">
+        @if (_role == "Student")
+        {
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Последние оценки</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>Предмет</th><th>Оценка</th><th>Дата</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Математика</td><td><span class="grade-cell grade-5">5</span></td><td>15.06</td></tr>
+                        <tr><td>Информатика</td><td><span class="grade-cell grade-4">4</span></td><td>14.06</td></tr>
+                        <tr><td>Физика</td><td><span class="grade-cell grade-3">3</span></td><td>14.06</td></tr>
+                        <tr><td>Русский язык</td><td><span class="grade-cell grade-5">5</span></td><td>13.06</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Расписание на сегодня</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>Пара</th><th>Предмет</th><th>Кабинет</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>Математика</td><td>301</td></tr>
+                        <tr><td>2</td><td>Информатика</td><td>205</td></tr>
+                        <tr><td>3</td><td>Физика</td><td>312</td></tr>
+                        <tr><td>4</td><td>Русский язык</td><td>108</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+        else if (_role == "Teacher")
+        {
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Мои группы</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>Группа</th><th>Студентов</th><th>Средний балл</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>ИС-21</td><td>25</td><td>4.1</td></tr>
+                        <tr><td>ИС-22</td><td>23</td><td>3.9</td></tr>
+                        <tr><td>ПР-21</td><td>28</td><td>4.3</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Последняя активность</span>
+                </div>
+                <table>
+                    <thead><tr><th>Действие</th><th>Время</th></tr></thead>
+                    <tbody>
+                        <tr><td>Выставлена оценка: Иванов А. — 5 (Математика)</td><td>10 мин назад</td></tr>
+                        <tr><td>Отмечена посещаемость: ИС-21</td><td>1 час назад</td></tr>
+                        <tr><td>Выставлена оценка: Петров Б. — 4 (Математика)</td><td>2 часа назад</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Последние события</span>
+                </div>
+                <table>
+                    <thead><tr><th>Событие</th><th>Время</th></tr></thead>
+                    <tbody>
+                        <tr><td>Добавлен студент: Сидоров В.В.</td><td>30 мин назад</td></tr>
+                        <tr><td>Создана группа: ПР-23</td><td>2 часа назад</td></tr>
+                        <tr><td>Обновлено расписание для ИС-22</td><td>Вчера</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Статистика по группам</span>
+                </div>
+                <table>
+                    <thead><tr><th>Группа</th><th>Студентов</th><th>Средний балл</th><th>Посещаемость</th></tr></thead>
+                    <tbody>
+                        <tr><td>ИС-21</td><td>25</td><td>4.1</td><td>91%</td></tr>
+                        <tr><td>ИС-22</td><td>23</td><td>3.9</td><td>87%</td></tr>
+                        <tr><td>ПР-21</td><td>28</td><td>4.3</td><td>94%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private string _userName = "";
+    private string _role = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _userName = user.Identity?.Name ?? "Пользователь";
+        _role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Student";
+        _loading = false;
+    }
+}

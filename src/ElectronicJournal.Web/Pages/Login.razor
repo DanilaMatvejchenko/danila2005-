@@ -1,0 +1,74 @@
+@page "/login"
+@layout LoginLayout
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="login-card">
+    <div class="login-logo">
+        <div class="icon">&#127891;</div>
+        <h1>Электронный журнал</h1>
+        <p>Войдите в свою учётную запись</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="login-error">@_error</div>
+    }
+
+    <EditForm Model="@_model" OnValidSubmit="HandleLogin">
+        <div class="form-group">
+            <label class="form-label">Электронная почта</label>
+            <InputText class="form-input" @bind-Value="_model.Email" placeholder="email@example.com" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Пароль</label>
+            <input type="password" class="form-input" @bind="_model.Password" placeholder="Введите пароль" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" disabled="@_loading">
+            @if (_loading)
+            {
+                <span class="spinner" style="width:18px;height:18px;border-width:2px;"></span>
+            }
+            else
+            {
+                <span>Войти</span>
+            }
+        </button>
+    </EditForm>
+</div>
+
+@code {
+    private LoginRequest _model = new();
+    private string? _error;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await AuthService.GetTokenAsync();
+        if (!string.IsNullOrEmpty(token))
+            Navigation.NavigateTo("/");
+    }
+
+    private async Task HandleLogin()
+    {
+        _error = null;
+        _loading = true;
+
+        try
+        {
+            var result = await AuthService.LoginAsync(_model);
+            if (result is not null)
+                Navigation.NavigateTo("/", forceLoad: true);
+            else
+                _error = "Неверный email или пароль. Попробуйте снова.";
+        }
+        catch
+        {
+            _error = "Ошибка подключения к серверу. Попробуйте позже.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

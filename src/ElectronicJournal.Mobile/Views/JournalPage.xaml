@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ElectronicJournal.Mobile.ViewModels"
+             x:Class="ElectronicJournal.Mobile.Views.JournalPage"
+             x:DataType="vm:JournalViewModel"
+             Title="Журнал оценок"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
+        <ScrollView Padding="16">
+            <VerticalStackLayout Spacing="12">
+
+                <Label Text="Журнал оценок" Style="{StaticResource PageTitle}" />
+
+                <!-- Subject Filter -->
+                <Frame Style="{StaticResource CardFrame}" Padding="12">
+                    <Picker Title="Фильтр по предмету"
+                            ItemsSource="{Binding Subjects}"
+                            SelectedItem="{Binding SelectedSubject}"
+                            FontSize="15"
+                            TextColor="{StaticResource TextPrimary}" />
+                </Frame>
+
+                <Button Text="Применить фильтр"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding FilterBySubjectCommand}"
+                        HeightRequest="44" />
+
+                <!-- Grades grouped by subject -->
+                <CollectionView ItemsSource="{Binding GradeGroups}"
+                                EmptyView="Нет оценок">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:Object">
+                            <VerticalStackLayout Spacing="8" Margin="0,8">
+                                <!-- Subject header -->
+                                <Frame BackgroundColor="{StaticResource Primary}" CornerRadius="12"
+                                       HasShadow="False" BorderColor="Transparent" Padding="14,10">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding SubjectName}"
+                                               TextColor="White" FontSize="16" FontAttributes="Bold" />
+                                        <Label Grid.Column="1"
+                                               Text="{Binding Average, StringFormat='Средний: {0:F1}'}"
+                                               TextColor="#ffffffcc" FontSize="14" />
+                                    </Grid>
+                                </Frame>
+
+                                <!-- Grades list -->
+                                <CollectionView ItemsSource="{Binding Grades}">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate x:DataType="x:Object">
+                                            <Frame Style="{StaticResource CardFrame}" Margin="0,3">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                                    <Frame Grid.Column="0"
+                                                           BackgroundColor="{Binding GradeColor}"
+                                                           CornerRadius="10" Padding="12,6"
+                                                           HasShadow="False" BorderColor="Transparent"
+                                                           VerticalOptions="Center">
+                                                        <Label Text="{Binding Value}" TextColor="White"
+                                                               FontAttributes="Bold" FontSize="18" />
+                                                    </Frame>
+                                                    <VerticalStackLayout Grid.Column="1" Spacing="2"
+                                                                         VerticalOptions="Center">
+                                                        <Label Text="{Binding GradeType}" FontSize="14"
+                                                               TextColor="{StaticResource TextPrimary}" />
+                                                        <Label Text="{Binding TeacherName}" FontSize="12"
+                                                               TextColor="{StaticResource TextSecondary}" />
+                                                    </VerticalStackLayout>
+                                                    <Label Grid.Column="2"
+                                                           Text="{Binding Date, StringFormat='{0:dd.MM}'}"
+                                                           FontSize="13" TextColor="{StaticResource Gray400}"
+                                                           VerticalOptions="Center" />
+                                                </Grid>
+                                            </Frame>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                                   HorizontalOptions="Center" Margin="0,20" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+
+</ContentPage>

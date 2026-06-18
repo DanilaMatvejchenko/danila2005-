@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ElectronicJournal.Mobile.ViewModels"
+             x:Class="ElectronicJournal.Mobile.Views.DashboardPage"
+             x:DataType="vm:DashboardViewModel"
+             Title="Главная"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+        <ScrollView Padding="16">
+            <VerticalStackLayout Spacing="12">
+
+                <Label Text="Главная" Style="{StaticResource PageTitle}" />
+
+                <!-- Stats Cards -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                    <Frame Style="{StaticResource StatCard}" Grid.Column="0">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding AverageGrade, StringFormat='{0:F1}'}"
+                                   Style="{StaticResource StatValue}" />
+                            <Label Text="Средний балл" Style="{StaticResource StatLabel}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Style="{StaticResource StatCard}" Grid.Column="1">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding AttendancePercent, StringFormat='{0:F0}%'}"
+                                   Style="{StaticResource StatValue}" TextColor="{StaticResource Success}" />
+                            <Label Text="Посещаемость" Style="{StaticResource StatLabel}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Style="{StaticResource StatCard}" Grid.Column="2">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding TodayLessonsCount}"
+                                   Style="{StaticResource StatValue}" TextColor="{StaticResource Secondary}" />
+                            <Label Text="Пар сегодня" Style="{StaticResource StatLabel}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+
+                <!-- Today's Schedule -->
+                <Label Text="Расписание на сегодня" Style="{StaticResource SectionTitle}" />
+                <CollectionView ItemsSource="{Binding TodaySchedule}"
+                                EmptyView="Нет занятий на сегодня">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:Object">
+                            <Frame Style="{StaticResource CardFrame}">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <Frame Grid.Column="0" BackgroundColor="{StaticResource Primary}"
+                                           CornerRadius="10" Padding="10,6" HasShadow="False"
+                                           BorderColor="Transparent" VerticalOptions="Center">
+                                        <Label Text="{Binding LessonNumber}" TextColor="White"
+                                               FontAttributes="Bold" FontSize="16" />
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding SubjectName}" FontSize="15" FontAttributes="Bold"
+                                               TextColor="{StaticResource TextPrimary}" />
+                                        <Label Text="{Binding TeacherName}" FontSize="13"
+                                               TextColor="{StaticResource TextSecondary}" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding TimeRange}" FontSize="13"
+                                               TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="End" />
+                                        <Label Text="{Binding Room, StringFormat='Каб. {0}'}" FontSize="12"
+                                               TextColor="{StaticResource Gray400}" HorizontalTextAlignment="End" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Recent Grades -->
+                <Label Text="Последние оценки" Style="{StaticResource SectionTitle}" />
+                <CollectionView ItemsSource="{Binding RecentGrades}"
+                                EmptyView="Нет оценок">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:Object">
+                            <Frame Style="{StaticResource CardFrame}">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding SubjectName}" FontSize="15" FontAttributes="Bold"
+                                               TextColor="{StaticResource TextPrimary}" />
+                                        <Label Text="{Binding Date, StringFormat='{0:dd.MM.yyyy}'}"
+                                               FontSize="12" TextColor="{StaticResource TextSecondary}" />
+                                    </VerticalStackLayout>
+                                    <Frame Grid.Column="1" BackgroundColor="{Binding GradeColor}"
+                                           CornerRadius="12" Padding="14,8" HasShadow="False"
+                                           BorderColor="Transparent" VerticalOptions="Center">
+                                        <Label Text="{Binding Value}" TextColor="White"
+                                               FontAttributes="Bold" FontSize="18" />
+                                    </Frame>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                                   HorizontalOptions="Center" Margin="0,20" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+
+</ContentPage>

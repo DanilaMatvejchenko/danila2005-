@@ -1,0 +1,100 @@
+@page "/reports"
+@attribute [Authorize(Roles = "Admin,Teacher")]
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Отчёты</h1>
+        <p class="page-subtitle">Формирование и экспорт отчётов</p>
+    </div>
+</div>
+
+<div class="stats-grid" style="margin-bottom:24px;">
+    <div class="card" style="cursor:pointer;" @onclick='() => _selectedReport = "grades"'>
+        <div style="display:flex;align-items:center;gap:16px;">
+            <div class="stat-icon blue" style="font-size:28px;">&#128202;</div>
+            <div>
+                <div style="font-weight:600;">Отчёт по оценкам</div>
+                <div style="font-size:13px;color:var(--text-secondary);">Успеваемость по группам и предметам</div>
+            </div>
+        </div>
+    </div>
+    <div class="card" style="cursor:pointer;" @onclick='() => _selectedReport = "attendance"'>
+        <div style="display:flex;align-items:center;gap:16px;">
+            <div class="stat-icon green" style="font-size:28px;">&#9745;</div>
+            <div>
+                <div style="font-weight:600;">Отчёт по посещаемости</div>
+                <div style="font-size:13px;color:var(--text-secondary);">Статистика посещений за период</div>
+            </div>
+        </div>
+    </div>
+    <div class="card" style="cursor:pointer;" @onclick='() => _selectedReport = "summary"'>
+        <div style="display:flex;align-items:center;gap:16px;">
+            <div class="stat-icon yellow" style="font-size:28px;">&#128203;</div>
+            <div>
+                <div style="font-weight:600;">Сводный отчёт</div>
+                <div style="font-size:13px;color:var(--text-secondary);">Общая статистика по техникуму</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_selectedReport))
+{
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Параметры отчёта</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+            <div class="form-group">
+                <label class="form-label">Группа</label>
+                <select class="form-select">
+                    <option>Все группы</option>
+                    <option>ИС-21</option>
+                    <option>ИС-22</option>
+                    <option>ПР-21</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Дата начала</label>
+                <input type="date" class="form-input" @bind="_dateFrom" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Дата окончания</label>
+                <input type="date" class="form-input" @bind="_dateTo" />
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" @onclick="GenerateReport">Сформировать</button>
+            <button class="btn btn-secondary">Экспорт в Excel</button>
+            <button class="btn btn-secondary">Экспорт в PDF</button>
+        </div>
+    </div>
+
+    @if (_reportGenerated)
+    {
+        <div class="card" style="margin-top:16px;">
+            <div class="card-header">
+                <span class="card-title">Результаты</span>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Группа</th><th>Студентов</th><th>Средний балл</th><th>Посещаемость</th><th>Отличников</th><th>Неуспевающих</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>ИС-21</td><td>25</td><td>4.1</td><td>91%</td><td>5</td><td>1</td></tr>
+                    <tr><td>ИС-22</td><td>23</td><td>3.9</td><td>87%</td><td>3</td><td>2</td></tr>
+                    <tr><td>ПР-21</td><td>28</td><td>4.3</td><td>94%</td><td>7</td><td>0</td></tr>
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private string _selectedReport = "";
+    private DateTime _dateFrom = DateTime.Today.AddMonths(-1);
+    private DateTime _dateTo = DateTime.Today;
+    private bool _reportGenerated;
+
+    private void GenerateReport() { _reportGenerated = true; }
+}
