@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ElectronicJournal.Mobile.ViewModels"
+             x:Class="ElectronicJournal.Mobile.Views.AttendancePage"
+             x:DataType="vm:AttendanceViewModel"
+             Title="Посещаемость"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
+        <ScrollView Padding="16">
+            <VerticalStackLayout Spacing="12">
+
+                <Label Text="Посещаемость" Style="{StaticResource PageTitle}" />
+
+                <!-- Attendance percentage card -->
+                <Frame Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                        <Label Text="{Binding AttendancePercent, StringFormat='{0:F1}%'}"
+                               Style="{StaticResource StatValue}" FontSize="40" />
+                        <Label Text="Общая посещаемость" Style="{StaticResource StatLabel}" FontSize="14" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Attendance Records -->
+                <Label Text="Записи" Style="{StaticResource SectionTitle}" />
+
+                <CollectionView ItemsSource="{Binding Records}"
+                                EmptyView="Нет записей о посещаемости">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:Object">
+                            <Frame Style="{StaticResource CardFrame}">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <!-- Status indicator -->
+                                    <BoxView Grid.Column="0"
+                                             Color="{Binding StatusColor}"
+                                             WidthRequest="6" CornerRadius="3"
+                                             VerticalOptions="Fill" />
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2"
+                                                         VerticalOptions="Center">
+                                        <Label Text="{Binding SubjectName}" FontSize="15"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource TextPrimary}" />
+                                        <Label Text="{Binding StatusText}" FontSize="13"
+                                               TextColor="{Binding StatusColor}" />
+                                        <Label Text="{Binding Note}" FontSize="12"
+                                               TextColor="{StaticResource Gray400}"
+                                               IsVisible="{Binding Note, Converter={x:Null}}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2"
+                                           Text="{Binding Date, StringFormat='{0:dd.MM.yyyy}'}"
+                                           FontSize="12" TextColor="{StaticResource TextSecondary}"
+                                           VerticalOptions="Center" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                                   HorizontalOptions="Center" Margin="0,20" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+
+</ContentPage>

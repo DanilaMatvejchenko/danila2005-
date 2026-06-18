@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ElectronicJournal.Mobile.ViewModels"
+             x:Class="ElectronicJournal.Mobile.Views.ChatPage"
+             x:DataType="vm:ChatViewModel"
+             Title="Чат"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <Grid RowDefinitions="*,Auto" Padding="0">
+
+        <!-- Messages list -->
+        <CollectionView Grid.Row="0"
+                         ItemsSource="{Binding Messages}"
+                         EmptyView="Нет сообщений"
+                         Margin="16,8">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="x:Object">
+                    <Grid Margin="0,4">
+                        <Frame CornerRadius="16" Padding="12,8" HasShadow="False"
+                               MaximumWidthRequest="280"
+                               BorderColor="Transparent"
+                               HorizontalOptions="{Binding IsMine, Converter={x:Null}}">
+                            <Frame.Triggers>
+                                <DataTrigger TargetType="Frame" Binding="{Binding IsMine}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="HorizontalOptions" Value="End" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Frame" Binding="{Binding IsMine}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource White}" />
+                                    <Setter Property="HorizontalOptions" Value="Start" />
+                                </DataTrigger>
+                            </Frame.Triggers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding SenderName}" FontSize="12"
+                                       FontAttributes="Bold" IsVisible="{Binding IsMine, Converter={x:Null}}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                            <Setter Property="IsVisible" Value="False" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="False">
+                                            <Setter Property="TextColor" Value="{StaticResource Primary}" />
+                                            <Setter Property="IsVisible" Value="True" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                                <Label Text="{Binding Text}" FontSize="15">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                            <Setter Property="TextColor" Value="White" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="False">
+                                            <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                                <Label Text="{Binding TimeText}" FontSize="11"
+                                       HorizontalTextAlignment="End">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="True">
+                                            <Setter Property="TextColor" Value="#ffffffaa" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsMine}" Value="False">
+                                            <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Message input -->
+        <Frame Grid.Row="1" BackgroundColor="{StaticResource White}"
+               CornerRadius="0" HasShadow="True" BorderColor="Transparent"
+               Padding="12,8">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border Grid.Column="0" StrokeShape="RoundRectangle 20"
+                        Stroke="{StaticResource Gray200}" Padding="12,0"
+                        BackgroundColor="{StaticResource Gray50}">
+                    <Entry Placeholder="Введите сообщение..."
+                           Text="{Binding MessageText}"
+                           FontSize="15"
+                           HeightRequest="44" />
+                </Border>
+                <Button Grid.Column="1" Text=">"
+                        Style="{StaticResource PrimaryButton}"
+                        WidthRequest="48" HeightRequest="48"
+                        CornerRadius="24" Padding="0"
+                        Command="{Binding SendMessageCommand}" />
+            </Grid>
+        </Frame>
+
+    </Grid>
+
+</ContentPage>
