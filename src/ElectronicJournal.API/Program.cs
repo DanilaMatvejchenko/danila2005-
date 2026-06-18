@@ -58,8 +58,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-    options.AddPolicy("SignalR", policy =>
         policy.AllowAnyMethod().AllowAnyHeader().AllowCredentials()
               .SetIsOriginAllowed(_ => true));
 });
@@ -126,6 +124,6 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<JournalHub>("/hubs/journal").RequireCors("SignalR");
+app.MapHub<JournalHub>("/hubs/journal");
 
 app.Run();

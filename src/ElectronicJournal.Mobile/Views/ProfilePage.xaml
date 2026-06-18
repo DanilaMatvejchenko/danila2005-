@@ -47,7 +47,7 @@
                     </VerticalStackLayout>
 
                     <!-- Group -->
-                    <VerticalStackLayout Spacing="4" IsVisible="{Binding GroupName, Converter={x:Null}}">
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding GroupName, Converter={StaticResource StringToBoolConverter}}">
                         <Label Text="Группа" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
                         <Label Text="{Binding GroupName}" Style="{StaticResource BodyText}" />
                     </VerticalStackLayout>
@@ -57,7 +57,7 @@
                         <Label Text="Телефон" Style="{StaticResource CaptionText}" FontAttributes="Bold" />
                         <Label Text="{Binding Phone, TargetNullValue='Не указан'}"
                                Style="{StaticResource BodyText}"
-                               IsVisible="{Binding IsEditing, Converter={x:Null}}" />
+                               IsVisible="{Binding IsEditing, Converter={StaticResource InvertedBoolConverter}}" />
                         <Border StrokeShape="RoundRectangle 12" Stroke="{StaticResource Gray200}"
                                 BackgroundColor="{StaticResource White}" Padding="12,0"
                                 IsVisible="{Binding IsEditing}">
@@ -72,7 +72,7 @@
             </Frame>
 
             <!-- Actions -->
-            <Button Text="{Binding IsEditing, Converter={x:Null}}"
+            <Button Text="{Binding IsEditing, Converter={StaticResource EditButtonTextConverter}}"
                     Style="{StaticResource SecondaryButton}"
                     Command="{Binding ToggleEditCommand}">
                 <Button.Triggers>

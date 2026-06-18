@@ -35,12 +35,12 @@
             @foreach (var day in _days)
             {
                 var entry = GetScheduleEntry(day, l);
-                <div class="schedule-cell" style="@(entry != null ? $"border-left:3px solid {entry.Value.color};" : "")">
+                <div class="schedule-cell" style="@(entry != null ? $"border-left:3px solid {entry.color};" : "")">
                     @if (entry != null)
                     {
-                        <div class="subject">@entry.Value.subject</div>
-                        <div class="teacher">@entry.Value.teacher</div>
-                        <div class="room">&#128205; @entry.Value.room</div>
+                        <div class="subject">@entry.subject</div>
+                        <div class="teacher">@entry.teacher</div>
+                        <div class="room">&#128205; @entry.room</div>
                     }
                 </div>
             }

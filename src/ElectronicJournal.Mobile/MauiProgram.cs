@@ -20,15 +20,14 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // HttpClient
-        builder.Services.AddSingleton(sp =>
-        {
-            var client = new HttpClient
-            {
-                BaseAddress = new Uri("https://localhost:5001/") // Configure API base URL
-            };
-            return client;
-        });
+        // HttpClient — change URL for your environment:
+        // Android emulator: https://10.0.2.2:5001/
+        // Physical device: use your server's IP
+        // Windows/iOS simulator: https://localhost:5001/
+        var baseUrl = DeviceInfo.Platform == DevicePlatform.Android
+            ? "https://10.0.2.2:5001/"
+            : "https://localhost:5001/";
+        builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri(baseUrl) });
 
         // Services
         builder.Services.AddSingleton<IAuthService, AuthService>();

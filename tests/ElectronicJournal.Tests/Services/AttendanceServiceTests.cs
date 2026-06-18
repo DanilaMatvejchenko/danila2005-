@@ -1,10 +1,9 @@
 using ElectronicJournal.API.Data;
+using ElectronicJournal.API.DTOs;
 using ElectronicJournal.API.Models;
 using ElectronicJournal.API.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace ElectronicJournal.Tests.Services;
 
@@ -19,8 +18,7 @@ public class AttendanceServiceTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new ApplicationDbContext(options);
-        var logger = new Mock<ILogger<AttendanceService>>();
-        _service = new AttendanceService(_context, logger.Object);
+        _service = new AttendanceService(_context);
         SeedData();
     }
 
@@ -36,18 +34,18 @@ public class AttendanceServiceTests : IDisposable
         _context.Subjects.Add(new Subject { Id = 1, Name = "Мат", HoursTotal = 120 });
 
         _context.Attendances.AddRange(
-            new Attendance { Id = 1, StudentId = 1, SubjectId = 1, Date = DateTime.Today, Status = AttendanceStatus.Present, MarkedById = 1 },
-            new Attendance { Id = 2, StudentId = 1, SubjectId = 1, Date = DateTime.Today.AddDays(-1), Status = AttendanceStatus.Absent, MarkedById = 1 },
-            new Attendance { Id = 3, StudentId = 1, SubjectId = 1, Date = DateTime.Today.AddDays(-2), Status = AttendanceStatus.Present, MarkedById = 1 }
+            new Attendance { Id = 1, StudentId = 1, SubjectId = 1, Date = DateTime.Today, Status = AttendanceStatus.Present },
+            new Attendance { Id = 2, StudentId = 1, SubjectId = 1, Date = DateTime.Today.AddDays(-1), Status = AttendanceStatus.Absent },
+            new Attendance { Id = 3, StudentId = 1, SubjectId = 1, Date = DateTime.Today.AddDays(-2), Status = AttendanceStatus.Present }
         );
 
         _context.SaveChanges();
     }
 
     [Fact]
-    public async Task GetByStudentId_ReturnsAll()
+    public async Task GetByStudent_ReturnsAll()
     {
-        var records = await _service.GetByStudentIdAsync(1);
+        var records = await _service.GetByStudentAsync(1);
         records.Should().HaveCount(3);
     }
 
@@ -56,22 +54,21 @@ public class AttendanceServiceTests : IDisposable
     {
         var stats = await _service.GetStatisticsAsync(1);
         stats.TotalClasses.Should().Be(3);
-        stats.PresentCount.Should().Be(2);
-        stats.AbsentCount.Should().Be(1);
+        stats.ClassesAttended.Should().Be(2);
         stats.AttendancePercentage.Should().BeApproximately(66.67, 0.01);
     }
 
     [Fact]
     public async Task Create_AddsRecord()
     {
-        var record = new Attendance
+        var dto = new CreateAttendanceDto
         {
             StudentId = 1, SubjectId = 1,
             Date = DateTime.Today.AddDays(-5),
-            Status = AttendanceStatus.Late, MarkedById = 1
+            Status = AttendanceStatus.Late
         };
 
-        var result = await _service.CreateAsync(record);
+        var result = await _service.CreateAsync(dto);
         result.Id.Should().BeGreaterThan(0);
     }
 

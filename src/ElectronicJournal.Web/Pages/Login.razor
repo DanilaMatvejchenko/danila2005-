@@ -15,7 +15,7 @@
         <div class="login-error">@_error</div>
     }
 
-    <EditForm Model="@_model" OnValidSubmit="HandleLogin">
+    <EditForm Model="@_model" OnSubmit="HandleLogin">
         <div class="form-group">
             <label class="form-label">Электронная почта</label>
             <InputText class="form-input" @bind-Value="_model.Email" placeholder="email@example.com" />

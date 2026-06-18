@@ -5,8 +5,6 @@ using ElectronicJournal.API.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace ElectronicJournal.Tests.Services;
 
@@ -32,8 +30,7 @@ public class AuthServiceTests : IDisposable
             })
             .Build();
 
-        var logger = new Mock<ILogger<AuthService>>();
-        _service = new AuthService(_context, config, logger.Object);
+        _service = new AuthService(_context, config);
     }
 
     [Fact]
@@ -51,12 +48,12 @@ public class AuthServiceTests : IDisposable
         var result = await _service.RegisterAsync(request);
 
         result.Should().NotBeNull();
-        result!.Token.Should().NotBeNullOrEmpty();
+        result.Token.Should().NotBeNullOrEmpty();
         result.Email.Should().Be("new@test.ru");
     }
 
     [Fact]
-    public async Task Register_ReturnNull_WhenEmailExists()
+    public async Task Register_Throws_WhenEmailExists()
     {
         _context.Users.Add(new User
         {
@@ -73,8 +70,8 @@ public class AuthServiceTests : IDisposable
             Role = UserRole.Student
         };
 
-        var result = await _service.RegisterAsync(request);
-        result.Should().BeNull();
+        var act = () => _service.RegisterAsync(request);
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
@@ -92,11 +89,11 @@ public class AuthServiceTests : IDisposable
         });
 
         result.Should().NotBeNull();
-        result!.Token.Should().NotBeNullOrEmpty();
+        result.Token.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
-    public async Task Login_ReturnsNull_WhenPasswordWrong()
+    public async Task Login_Throws_WhenPasswordWrong()
     {
         await _service.RegisterAsync(new RegisterRequest
         {
@@ -104,12 +101,12 @@ public class AuthServiceTests : IDisposable
             FirstName = "A", LastName = "B", Role = UserRole.Student
         });
 
-        var result = await _service.LoginAsync(new LoginRequest
+        var act = () => _service.LoginAsync(new LoginRequest
         {
             Email = "wrong@test.ru", Password = "WrongPassword!"
         });
 
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
     public void Dispose()

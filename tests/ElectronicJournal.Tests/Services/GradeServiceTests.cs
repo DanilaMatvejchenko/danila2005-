@@ -1,10 +1,8 @@
 using ElectronicJournal.API.Data;
+using ElectronicJournal.API.DTOs;
 using ElectronicJournal.API.Models;
-using ElectronicJournal.API.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace ElectronicJournal.Tests.Services;
 
@@ -19,8 +17,7 @@ public class GradeServiceTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new ApplicationDbContext(options);
-        var logger = new Mock<ILogger<GradeService>>();
-        _service = new GradeService(_context, logger.Object);
+        _service = new GradeService(_context);
         SeedData();
     }
 
@@ -52,16 +49,16 @@ public class GradeServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetByStudentId_ReturnsAllGrades()
+    public async Task GetByStudent_ReturnsAllGrades()
     {
-        var grades = await _service.GetByStudentIdAsync(1);
+        var grades = await _service.GetByStudentAsync(1);
         grades.Should().HaveCount(3);
     }
 
     [Fact]
-    public async Task GetByStudentId_ReturnsEmpty_WhenNoGrades()
+    public async Task GetByStudent_ReturnsEmpty_WhenNoGrades()
     {
-        var grades = await _service.GetByStudentIdAsync(999);
+        var grades = await _service.GetByStudentAsync(999);
         grades.Should().BeEmpty();
     }
 
@@ -75,13 +72,13 @@ public class GradeServiceTests : IDisposable
     [Fact]
     public async Task CreateGrade_AddsToDatabase()
     {
-        var grade = new Grade
+        var dto = new CreateGradeDto
         {
             StudentId = 1, SubjectId = 1, TeacherId = 1,
             Value = 5, Date = DateTime.Today, GradeType = GradeType.Midterm
         };
 
-        var result = await _service.CreateAsync(grade);
+        var result = await _service.CreateAsync(dto);
 
         result.Id.Should().BeGreaterThan(0);
         var count = await _context.Grades.CountAsync();
@@ -89,9 +86,9 @@ public class GradeServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetBySubjectId_ReturnsCorrectGrades()
+    public async Task GetBySubject_ReturnsCorrectGrades()
     {
-        var grades = await _service.GetBySubjectIdAsync(1);
+        var grades = await _service.GetBySubjectAsync(1);
         grades.Should().HaveCount(3);
         grades.Should().AllSatisfy(g => g.SubjectId.Should().Be(1));
     }

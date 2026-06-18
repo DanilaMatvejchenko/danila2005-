@@ -45,7 +45,7 @@
                                                TextColor="{Binding StatusColor}" />
                                         <Label Text="{Binding Note}" FontSize="12"
                                                TextColor="{StaticResource Gray400}"
-                                               IsVisible="{Binding Note, Converter={x:Null}}" />
+                                               IsVisible="{Binding Note, Converter={StaticResource StringToBoolConverter}}" />
                                     </VerticalStackLayout>
                                     <Label Grid.Column="2"
                                            Text="{Binding Date, StringFormat='{0:dd.MM.yyyy}'}"
