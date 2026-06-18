@@ -6,7 +6,7 @@ public class Group
     public string Name { get; set; } = string.Empty;
     public int CourseNumber { get; set; }
     public string Specialty { get; set; } = string.Empty;
-    public int CuratorId { get; set; }
-    public Teacher Curator { get; set; } = null!;
+    public int? CuratorId { get; set; }
+    public Teacher? Curator { get; set; }
     public ICollection<Student> Students { get; set; } = new List<Student>();
 }

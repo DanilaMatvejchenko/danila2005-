@@ -47,7 +47,7 @@ public class ApplicationDbContext : DbContext
         // Group
         modelBuilder.Entity<Group>(e =>
         {
-            e.HasOne(g => g.Curator).WithMany().HasForeignKey(g => g.CuratorId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(g => g.Curator).WithMany().HasForeignKey(g => g.CuratorId).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(g => g.Name).IsUnique();
         });
 

@@ -1,6 +1,7 @@
 using ElectronicJournal.API.Data;
 using ElectronicJournal.API.DTOs;
 using ElectronicJournal.API.Models;
+using ElectronicJournal.API.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
