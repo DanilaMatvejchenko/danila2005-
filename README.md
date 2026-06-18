@@ -16,45 +16,32 @@
 
 ---
 
-## Быстрый запуск (тестовая версия)
+## Быстрый запуск — одна команда
 
-> Не нужно устанавливать SQL Server — при первом запуске автоматически создаётся SQLite база с тестовыми данными.
+> Не нужно устанавливать SQL Server, не нужно настраивать БД.  
+> Всё работает из коробки.
 
 ### Требования
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 
-### 1. Клонировать репозиторий
+### Запуск
 
 ```bash
 git clone https://github.com/DanilaMatvejchenko/danila2005-.git
 cd danila2005-
+dotnet run --project src/ElectronicJournal.API
 ```
 
-### 2. Запустить API-сервер
-
-```bash
-cd src/ElectronicJournal.API
-dotnet run
-```
+Открыть в браузере: **http://localhost:5000**
 
 При первом запуске автоматически:
 - Создастся файл `ElectronicJournal.db` (SQLite)
 - Заполнится тестовыми данными (пользователи, оценки, расписание и т.д.)
 
-API доступен: **http://localhost:5000**
-Swagger UI: **http://localhost:5000/swagger**
+> Swagger UI для тестирования API: **http://localhost:5000/swagger**
 
-### 3. Запустить Web-приложение (в отдельном терминале)
-
-```bash
-cd src/ElectronicJournal.Web
-dotnet run
-```
-
-Web-приложение: **http://localhost:5010**
-
-### 4. Войти в систему
+### Тестовые учётные записи
 
 | Роль | Email | Пароль |
 |------|-------|--------|
@@ -71,10 +58,9 @@ Web-приложение: **http://localhost:5010**
 ## Запуск через Visual Studio
 
 1. Откройте `ElectronicJournal.sln`
-2. Правый клик на Solution → **Configure Startup Projects**
-3. Выберите **Multiple startup projects**
-4. Установите `Start` для `ElectronicJournal.API` и `ElectronicJournal.Web`
-5. Нажмите **F5**
+2. Установите стартовым проектом: **ElectronicJournal.API**
+3. Нажмите **F5**
+4. Откроется браузер на `http://localhost:5000`
 
 ---
 
@@ -82,15 +68,15 @@ Web-приложение: **http://localhost:5010**
 
 ### Требования
 - Visual Studio 2022/2026 с workload **.NET MAUI**
-- Android SDK (для Android) или macOS с Xcode (для iOS)
+- Android SDK или macOS + Xcode
 
 ### Запуск
-1. Откройте `ElectronicJournal.sln` в Visual Studio
-2. Выберите целевой проект: **ElectronicJournal.Mobile**
+1. Откройте `ElectronicJournal.sln`
+2. Выберите проект: **ElectronicJournal.Mobile**
 3. Выберите эмулятор/устройство
-4. Нажмите **F5**
+4. **F5**
 
-> Для Android-эмулятора API-адрес автоматически настроен на `10.0.2.2:5001`.
+> Для Android-эмулятора API-адрес автоматически настроен на `10.0.2.2`.
 
 ---
 
@@ -102,9 +88,9 @@ dotnet test tests/ElectronicJournal.Tests
 
 ---
 
-## Переключение на SQL Server (продакшн)
+## Переключение на SQL Server
 
-В `src/ElectronicJournal.API/appsettings.json` измените строку подключения:
+В `src/ElectronicJournal.API/appsettings.json`:
 
 ```json
 "ConnectionStrings": {
@@ -112,16 +98,15 @@ dotnet test tests/ElectronicJournal.Tests
 }
 ```
 
-Или выполните SQL-скрипт: `sql/001_CreateDatabase.sql`
-
 ---
 
 ## Структура проекта
 
 ```
+ElectronicJournal.sln
 ├── src/
-│   ├── ElectronicJournal.API/      # REST API + SignalR + SeedData
-│   ├── ElectronicJournal.Web/      # Blazor WebAssembly (ПК)
+│   ├── ElectronicJournal.API/      # API + хостинг Blazor WASM
+│   ├── ElectronicJournal.Web/      # Blazor WebAssembly (UI)
 │   └── ElectronicJournal.Mobile/   # .NET MAUI (Android/iOS)
 ├── tests/
 │   └── ElectronicJournal.Tests/    # Unit-тесты
@@ -136,11 +121,10 @@ dotnet test tests/ElectronicJournal.Tests
 - Учёт посещаемости
 - Расписание занятий
 - Чат между пользователями
-- Уведомления в реальном времени (SignalR)
+- Уведомления (SignalR)
 - Отчёты по успеваемости
 - Тёмная и светлая тема
-- Адаптивный интерфейс
 
 ## Документация
 
-Подробная архитектура: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)

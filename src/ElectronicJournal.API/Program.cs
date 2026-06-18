@@ -137,9 +137,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+// Blazor WASM hosting
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<JournalHub>("/hubs/journal");
+
+// Fallback to Blazor index.html for SPA routing
+app.MapFallbackToFile("index.html");
 
 app.Run();
